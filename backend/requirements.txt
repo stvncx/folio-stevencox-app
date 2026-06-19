@@ -1,0 +1,10 @@
+django>=6.0,<7.0
+django-ninja
+psycopg[binary]
+channels
+channels-redis
+uvicorn[standard]
+anthropic
+django-environ
+django-cors-headers
+Pillow

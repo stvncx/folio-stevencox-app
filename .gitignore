@@ -1,0 +1,13 @@
+# secrets / local
+backend/.env
+*.env
+# python
+__pycache__/
+*.py[cod]
+backend/.venv/
+backend/staticfiles/
+# node / frontend build
+node_modules/
+frontend/dist/
+# uploads
+media/
