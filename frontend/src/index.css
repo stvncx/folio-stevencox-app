@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #000000;
+  --color-accent: #0066cc;
+}
+
+html, body, #root { height: 100%; margin: 0; }
+body {
+  font-family: var(--font-family-custom, ui-sans-serif, system-ui, -apple-system, sans-serif);
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+/* TipTap content */
+.tiptap { min-height: 120px; padding: 10px 12px; outline: none; }
+.tiptap p { margin: 0 0 8px; }
+.tiptap ul { list-style: disc; padding-left: 22px; margin: 0 0 8px; }
+.tiptap ol { list-style: decimal; padding-left: 22px; margin: 0 0 8px; }
+.tiptap table { border-collapse: collapse; margin: 8px 0; }
+.tiptap td, .tiptap th { border: 1px solid #cbd5e1; padding: 4px 8px; min-width: 40px; }
+.tiptap a { color: var(--color-accent); text-decoration: underline; }
+
+/* Print: clean resume output (no app chrome) */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}
