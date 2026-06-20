@@ -173,6 +173,39 @@ class ReorderIn(Schema):
     ordered_ids: List[int]
 
 
+# --- reorder routes declared FIRST so literal paths win over /<sid>/ --------
+@topical_router.post('/{tid}/sections/reorder/')
+def t_reorder_sections(request, tid: int, data: ReorderIn):
+    t = _topical(request, tid)
+    for i, sid in enumerate(data.ordered_ids):
+        t.sections.filter(id=sid).update(order=i)
+    return [_t_section_d(s) for s in t.sections.all()]
+
+
+@topical_router.post('/{tid}/sections/{sid}/entries/reorder/')
+def t_reorder_entries(request, tid: int, sid: int, data: ReorderIn):
+    s = _t_section(request, tid, sid)
+    for i, eid in enumerate(data.ordered_ids):
+        s.entries.filter(id=eid).update(order=i)
+    return [_t_entry_d(e) for e in s.entries.all()]
+
+
+@custom_router.post('/{cid}/sections/reorder/')
+def c_reorder_sections(request, cid: int, data: ReorderIn):
+    c = _custom(request, cid)
+    for i, sid in enumerate(data.ordered_ids):
+        c.sections.filter(id=sid).update(order=i)
+    return [_c_section_d(s) for s in c.sections.all()]
+
+
+@custom_router.post('/{cid}/sections/{sid}/entries/reorder/')
+def c_reorder_entries(request, cid: int, sid: int, data: ReorderIn):
+    s = _c_section(request, cid, sid)
+    for i, eid in enumerate(data.ordered_ids):
+        s.entries.filter(id=eid).update(order=i)
+    return [_c_entry_d(e) for e in s.entries.all()]
+
+
 # ===========================================================================
 #  TOPICAL RESUMES
 # ===========================================================================
@@ -249,14 +282,6 @@ def t_delete_section(request, tid: int, sid: int):
     return 204, None
 
 
-@topical_router.post('/{tid}/sections/reorder/')
-def t_reorder_sections(request, tid: int, data: ReorderIn):
-    t = _topical(request, tid)
-    for i, sid in enumerate(data.ordered_ids):
-        t.sections.filter(id=sid).update(order=i)
-    return [_t_section_d(s) for s in t.sections.all()]
-
-
 @topical_router.get('/{tid}/sections/{sid}/entries/')
 def t_list_entries(request, tid: int, sid: int):
     return [_t_entry_d(e) for e in _t_section(request, tid, sid).entries.all()]
@@ -290,14 +315,6 @@ def t_update_entry(request, tid: int, sid: int, eid: int, data: TEntryPatch):
 def t_delete_entry(request, tid: int, sid: int, eid: int):
     _t_entry(request, sid, eid).delete()
     return 204, None
-
-
-@topical_router.post('/{tid}/sections/{sid}/entries/reorder/')
-def t_reorder_entries(request, tid: int, sid: int, data: ReorderIn):
-    s = _t_section(request, tid, sid)
-    for i, eid in enumerate(data.ordered_ids):
-        s.entries.filter(id=eid).update(order=i)
-    return [_t_entry_d(e) for e in s.entries.all()]
 
 
 # --- custom under topical --------------------------------------------------
@@ -381,14 +398,6 @@ def c_delete_section(request, cid: int, sid: int):
     return 204, None
 
 
-@custom_router.post('/{cid}/sections/reorder/')
-def c_reorder_sections(request, cid: int, data: ReorderIn):
-    c = _custom(request, cid)
-    for i, sid in enumerate(data.ordered_ids):
-        c.sections.filter(id=sid).update(order=i)
-    return [_c_section_d(s) for s in c.sections.all()]
-
-
 @custom_router.get('/{cid}/sections/{sid}/entries/')
 def c_list_entries(request, cid: int, sid: int):
     return [_c_entry_d(e) for e in _c_section(request, cid, sid).entries.all()]
@@ -414,11 +423,3 @@ def c_update_entry(request, cid: int, sid: int, eid: int, data: EntryIn):
 def c_delete_entry(request, cid: int, sid: int, eid: int):
     _c_entry(request, sid, eid).delete()
     return 204, None
-
-
-@custom_router.post('/{cid}/sections/{sid}/entries/reorder/')
-def c_reorder_entries(request, cid: int, sid: int, data: ReorderIn):
-    s = _c_section(request, cid, sid)
-    for i, eid in enumerate(data.ordered_ids):
-        s.entries.filter(id=eid).update(order=i)
-    return [_c_entry_d(e) for e in s.entries.all()]

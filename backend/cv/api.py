@@ -71,6 +71,23 @@ class ReorderIn(Schema):
     ordered_ids: List[int]
 
 
+# --- reorder (declared FIRST so literal paths win over /sections/<sid>/) -----
+@router.post('/sections/reorder/')
+def reorder_sections(request, data: ReorderIn):
+    cv = _cv(request)
+    for i, sid in enumerate(data.ordered_ids):
+        cv.sections.filter(id=sid).update(order=i)
+    return [_section_dict(s) for s in cv.sections.all()]
+
+
+@router.post('/sections/{sid}/entries/reorder/')
+def reorder_entries(request, sid: int, data: ReorderIn):
+    s = _section(request, sid)
+    for i, eid in enumerate(data.ordered_ids):
+        s.entries.filter(id=eid).update(order=i)
+    return [_entry_dict(e) for e in s.entries.all()]
+
+
 # --- CV --------------------------------------------------------------------
 @router.get('/')
 def get_cv(request):
@@ -125,14 +142,6 @@ def delete_section(request, sid: int):
     return 204, None
 
 
-@router.post('/sections/reorder/')
-def reorder_sections(request, data: ReorderIn):
-    cv = _cv(request)
-    for i, sid in enumerate(data.ordered_ids):
-        cv.sections.filter(id=sid).update(order=i)
-    return [_section_dict(s) for s in cv.sections.all()]
-
-
 # --- entries ---------------------------------------------------------------
 @router.get('/sections/{sid}/entries/')
 def list_entries(request, sid: int):
@@ -162,11 +171,3 @@ def update_entry(request, sid: int, eid: int, data: EntryIn):
 def delete_entry(request, sid: int, eid: int):
     _entry(request, sid, eid).delete()
     return 204, None
-
-
-@router.post('/sections/{sid}/entries/reorder/')
-def reorder_entries(request, sid: int, data: ReorderIn):
-    s = _section(request, sid)
-    for i, eid in enumerate(data.ordered_ids):
-        s.entries.filter(id=eid).update(order=i)
-    return [_entry_dict(e) for e in s.entries.all()]
