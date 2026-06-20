@@ -84,6 +84,7 @@ USE_TZ = True
 # Static — hashed filenames (cache-busting) for the admin assets nginx serves.
 STATIC_URL = '/static/'
 STATIC_ROOT = env('STATIC_ROOT', default=str(BASE_DIR / 'staticfiles'))
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'},

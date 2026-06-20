@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | Folio Administration{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'admin_folio.css' %}">{% endblock %}
+
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">Folio — Administration</a></div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
