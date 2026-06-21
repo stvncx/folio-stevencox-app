@@ -185,7 +185,14 @@ export function emptyPosition(): Position {
 
 // Accepts the new {company, positions[]} shape OR a legacy flat experience
 // entry (one role) and always returns {company, positions[]}.
-export function normalizeExperience(data: any): { company: string; positions: Position[] } {
+export interface Experience {
+  company: string
+  location: string                 // company-level location
+  use_company_location: boolean    // apply company location to all positions
+  positions: Position[]
+}
+
+export function normalizeExperience(data: any): Experience {
   const d = data || {}
   const conv = (p: any): Position => ({
     ...emptyPosition(), ...p,
@@ -193,10 +200,16 @@ export function normalizeExperience(data: any): { company: string; positions: Po
     bullets: Array.isArray(p.bullets) ? p.bullets : [],
     start_date: toMonthYear(p.start_date), end_date: toMonthYear(p.end_date),
   })
-  if (Array.isArray(d.positions)) return { company: d.company || '', positions: d.positions.map(conv) }
+  const base = { company: d.company || '', location: d.location || '', use_company_location: !!d.use_company_location }
+  if (Array.isArray(d.positions)) return { ...base, positions: d.positions.map(conv) }
   const hasContent = d.job_title || d.description || (Array.isArray(d.descriptions) && d.descriptions.length) ||
     (Array.isArray(d.bullets) && d.bullets.length)
-  return { company: d.company || '', positions: hasContent ? [conv(d)] : [emptyPosition()] }
+  return { ...base, positions: hasContent ? [conv(d)] : [emptyPosition()] }
+}
+
+// Effective location for a position, given its parent experience group.
+export function positionLocation(exp: { location?: string; use_company_location?: boolean }, p: Position): string {
+  return exp.use_company_location ? (exp.location || '') : (p.location || '')
 }
 
 // A short human label for an entry, for list rows.

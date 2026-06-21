@@ -13,6 +13,8 @@ export function ExperienceEntryForm({ initial, onSave, onCancel, saving }: {
 }) {
   const norm = normalizeExperience(initial)
   const [company, setCompany] = useState(norm.company)
+  const [companyLocation, setCompanyLocation] = useState(norm.location)
+  const [useCompanyLocation, setUseCompanyLocation] = useState(norm.use_company_location)
   const [positions, setPositions] = useState<Position[]>(norm.positions.length ? norm.positions : [emptyPosition()])
   const [error, setError] = useState('')
 
@@ -23,7 +25,7 @@ export function ExperienceEntryForm({ initial, onSave, onCancel, saving }: {
     if (!company.trim()) { setError('Company is required.'); return }
     for (const p of positions) if (!p.job_title.trim()) { setError('Each position needs a job title.'); return }
     setError('')
-    onSave({ company: company.trim(), positions })
+    onSave({ company: company.trim(), location: companyLocation.trim(), use_company_location: useCompanyLocation, positions })
   }
 
   return (
@@ -31,6 +33,13 @@ export function ExperienceEntryForm({ initial, onSave, onCancel, saving }: {
       <Field label="Company *">
         <input className={input} value={company} onChange={(e) => setCompany(e.target.value)} />
       </Field>
+      <Field label="Company location">
+        <input className={input} value={companyLocation} onChange={(e) => setCompanyLocation(e.target.value)} />
+      </Field>
+      <label className="flex items-center gap-2 mb-3 text-sm">
+        <input type="checkbox" checked={useCompanyLocation} onChange={(e) => setUseCompanyLocation(e.target.checked)} />
+        Use this location for all positions
+      </label>
 
       {positions.map((p, i) => (
         <div key={i} className="border border-slate-200 rounded p-3 mb-3">
@@ -39,7 +48,9 @@ export function ExperienceEntryForm({ initial, onSave, onCancel, saving }: {
             {positions.length > 1 && <Button variant="ghost" type="button" onClick={() => setPositions((ps) => ps.filter((_, j) => j !== i))}>Remove position</Button>}
           </div>
           <Field label="Job title *"><input className={input} value={p.job_title} onChange={(e) => setPos(i, { job_title: e.target.value })} /></Field>
-          <Field label="Location"><input className={input} value={p.location || ''} onChange={(e) => setPos(i, { location: e.target.value })} /></Field>
+          {!useCompanyLocation && (
+            <Field label="Location"><input className={input} value={p.location || ''} onChange={(e) => setPos(i, { location: e.target.value })} /></Field>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <Field label="Start (MM-YYYY)"><input className={input} placeholder="MM-YYYY" value={p.start_date || ''} onChange={(e) => setPos(i, { start_date: e.target.value })} /></Field>
             {!p.is_current && <Field label="End (MM-YYYY)"><input className={input} placeholder="MM-YYYY" value={p.end_date || ''} onChange={(e) => setPos(i, { end_date: e.target.value })} /></Field>}

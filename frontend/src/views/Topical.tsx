@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../lib/api'
 import { useGenerate } from '../lib/generate'
-import { dateRange, entryTitle, normalizeExperience } from '../lib/sections'
+import { dateRange, entryTitle, normalizeExperience, positionLocation } from '../lib/sections'
 import { EntryForm } from '../components/EntryForm'
 import { Sortable } from '../components/Sortable'
 import { Button, Card, Spinner, confirmAction, input, useToast } from '../components/ui'
@@ -14,6 +14,8 @@ function prepExperience(data: any) {
   const exp = normalizeExperience(data)
   return {
     company: exp.company,
+    location: exp.location,
+    use_company_location: exp.use_company_location,
     positions: exp.positions.map((p) => ({
       ...p,
       selected_description: (p.descriptions && p.descriptions.length) ? (p.selected_description ?? 0) : null,
@@ -42,7 +44,8 @@ function ExperienceSelection({ entry, save }: { entry: any; save: (data: any) =>
         return (
           <div key={i} className="mt-2 pl-3 border-l-2 border-slate-200">
             <div className="font-medium">{p.job_title || '(role)'}
-              {dateRange(p) && <span className="text-xs text-slate-400"> · {dateRange(p)}</span>}</div>
+              {dateRange(p) && <span className="text-xs text-slate-400"> · {dateRange(p)}</span>}
+              {positionLocation(data, p) && <span className="text-xs text-slate-400"> · {positionLocation(data, p)}</span>}</div>
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-1 mb-1">Description (choose one)</div>
             {descriptions.length === 0 && <p className="text-xs text-slate-400">No descriptions — add alternatives in the CV.</p>}
             {descriptions.map((html, di) => (

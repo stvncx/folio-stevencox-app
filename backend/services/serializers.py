@@ -44,10 +44,19 @@ def _resolve_selection(d: dict) -> dict:
 
 
 def _resolve_entry_data(data: dict) -> dict:
-    """Resolve selections; for grouped experience, resolve each position."""
+    """Resolve selections; for grouped experience, resolve each position and
+    apply the company-level location when 'use for all positions' is set."""
     d = dict(data or {})
     if isinstance(d.get('positions'), list):
-        d['positions'] = [_resolve_selection(p) for p in d['positions']]
+        use_company = bool(d.get('use_company_location'))
+        company_loc = d.get('location') or ''
+        positions = []
+        for p in d['positions']:
+            rp = _resolve_selection(p)
+            if use_company:
+                rp['location'] = company_loc
+            positions.append(rp)
+        d['positions'] = positions
         return d
     return _resolve_selection(d)
 
