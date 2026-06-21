@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FIELDS, toMonthYear } from '../lib/sections'
 import { RichEditor } from './Editor'
+import { ExperienceEntryForm } from './ExperienceEntryForm'
 import { Button, Field, input } from './ui'
 
 export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
@@ -10,6 +11,9 @@ export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
   onCancel: () => void
   saving?: boolean
 }) {
+  if (sectionType === 'experience') {
+    return <ExperienceEntryForm initial={initial} onSave={onSave} onCancel={onCancel} saving={saving} />
+  }
   const fields = FIELDS[sectionType] || []
   const [data, setData] = useState<Record<string, any>>(() => {
     const init: Record<string, any> = initial ? { ...initial } : {}

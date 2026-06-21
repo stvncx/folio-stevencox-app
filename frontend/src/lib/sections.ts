@@ -166,6 +166,39 @@ export function dateRange(data: Record<string, any>): string {
   return [start, end].filter(Boolean).join(' – ')
 }
 
+// --- Experience: company group with nested positions ----------------------
+export interface Position {
+  job_title: string
+  location?: string
+  start_date?: string
+  end_date?: string
+  is_current?: boolean
+  descriptions?: string[]
+  bullets?: string[]
+  selected_description?: number | null   // topical selection
+  selected_bullets?: number[]            // topical selection
+}
+
+export function emptyPosition(): Position {
+  return { job_title: '', location: '', start_date: '', end_date: '', is_current: false, descriptions: [], bullets: [] }
+}
+
+// Accepts the new {company, positions[]} shape OR a legacy flat experience
+// entry (one role) and always returns {company, positions[]}.
+export function normalizeExperience(data: any): { company: string; positions: Position[] } {
+  const d = data || {}
+  const conv = (p: any): Position => ({
+    ...emptyPosition(), ...p,
+    descriptions: Array.isArray(p.descriptions) ? p.descriptions : (p.description ? [p.description] : []),
+    bullets: Array.isArray(p.bullets) ? p.bullets : [],
+    start_date: toMonthYear(p.start_date), end_date: toMonthYear(p.end_date),
+  })
+  if (Array.isArray(d.positions)) return { company: d.company || '', positions: d.positions.map(conv) }
+  const hasContent = d.job_title || d.description || (Array.isArray(d.descriptions) && d.descriptions.length) ||
+    (Array.isArray(d.bullets) && d.bullets.length)
+  return { company: d.company || '', positions: hasContent ? [conv(d)] : [emptyPosition()] }
+}
+
 // A short human label for an entry, for list rows.
 export function entryTitle(sectionType: string, data: Record<string, unknown>): string {
   const d = data || {}
@@ -174,7 +207,11 @@ export function entryTitle(sectionType: string, data: Record<string, unknown>): 
   switch (sectionType) {
     case 'contact': return pick('full_name') || pick('email') || '(contact)'
     case 'headline': case 'about': return (pick('text') || '').replace(/<[^>]+>/g, '').slice(0, 80) || '(empty)'
-    case 'experience': return withDates([pick('job_title'), pick('company')].filter(Boolean).join(' · ') || '(role)')
+    case 'experience': {
+      const exp = normalizeExperience(d)
+      const titles = exp.positions.map((p) => p.job_title).filter(Boolean)
+      return exp.company ? (titles.length ? `${exp.company} — ${titles.join(', ')}` : exp.company) : '(company)'
+    }
     case 'education': return withDates([pick('degree'), pick('school')].filter(Boolean).join(' · ') || '(degree)')
     case 'skills': return pick('name') || '(skill)'
     case 'languages': return pick('language') || '(language)'

@@ -28,7 +28,7 @@ REQUIRED_FIELDS = {
     'contact': ['full_name'],
     'headline': ['text'],
     'about': ['text'],
-    'experience': ['job_title', 'company', 'start_date', 'is_current'],
+    'experience': ['company'],  # positions validated separately (grouped roles)
     'education': ['school', 'degree'],
     'skills': ['name'],
     'certifications': ['name', 'issuing_organization', 'does_not_expire'],

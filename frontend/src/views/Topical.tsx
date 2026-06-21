@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../lib/api'
 import { useGenerate } from '../lib/generate'
-import { dateRange, entryTitle } from '../lib/sections'
+import { dateRange, entryTitle, normalizeExperience } from '../lib/sections'
 import { EntryForm } from '../components/EntryForm'
 import { Sortable } from '../components/Sortable'
 import { Button, Card, Spinner, confirmAction, input, useToast } from '../components/ui'
@@ -11,13 +11,14 @@ import { Button, Card, Spinner, confirmAction, input, useToast } from '../compon
 // Normalise an experience entry's data into pool + selection (defaults: first
 // description, all bullets) so it can be mixed-and-matched per resume.
 function prepExperience(data: any) {
-  const descriptions: string[] = Array.isArray(data.descriptions)
-    ? data.descriptions : (data.description ? [data.description] : [])
-  const bullets: string[] = Array.isArray(data.bullets) ? data.bullets : []
+  const exp = normalizeExperience(data)
   return {
-    ...data, descriptions, bullets,
-    selected_description: descriptions.length ? 0 : null,
-    selected_bullets: bullets.map((_, i) => i),
+    company: exp.company,
+    positions: exp.positions.map((p) => ({
+      ...p,
+      selected_description: (p.descriptions && p.descriptions.length) ? (p.selected_description ?? 0) : null,
+      selected_bullets: p.selected_bullets ?? (p.bullets || []).map((_, i) => i),
+    })),
   }
 }
 
@@ -25,35 +26,46 @@ function prepExperience(data: any) {
 // which bullets to include. Saves silently (no refetch) for snappy toggling.
 function ExperienceSelection({ entry, save }: { entry: any; save: (data: any) => void }) {
   const [data, setData] = useState<any>(() => prepExperience(entry.data))
-  const descriptions: string[] = data.descriptions || []
-  const bullets: string[] = data.bullets || []
-  const selDesc: number | null = data.selected_description ?? (descriptions.length ? 0 : null)
-  const selBullets: number[] = data.selected_bullets ?? bullets.map((_: string, i: number) => i)
-  const update = (patch: any) => { const nd = { ...data, ...patch }; setData(nd); save(nd) }
+  const positions: any[] = data.positions || []
+  const setPos = (i: number, patch: any) => {
+    const nd = { ...data, positions: positions.map((p, j) => (j === i ? { ...p, ...patch } : p)) }
+    setData(nd); save(nd)
+  }
   return (
     <div className="text-sm">
-      <div className="font-medium">{data.job_title} <span className="text-slate-400">· {data.company}</span></div>
-      {dateRange(data) && <div className="text-xs text-slate-400">{dateRange(data)}</div>}
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-2 mb-1">Description (choose one)</div>
-      {descriptions.length === 0 && <p className="text-xs text-slate-400">No descriptions — add alternatives in the CV.</p>}
-      {descriptions.map((html, i) => (
-        <label key={i} className="flex gap-2 items-start mb-1 cursor-pointer">
-          <input type="radio" className="mt-1" checked={selDesc === i} onChange={() => update({ selected_description: i })} />
-          <span className="prose-sm text-slate-700" dangerouslySetInnerHTML={{ __html: html || '<em>(empty)</em>' }} />
-        </label>
-      ))}
-      {bullets.length > 0 && (
-        <>
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-2 mb-1">Bullets (select any)</div>
-          {bullets.map((b, i) => (
-            <label key={i} className="flex gap-2 items-start mb-1 cursor-pointer">
-              <input type="checkbox" className="mt-1" checked={selBullets.includes(i)}
-                onChange={(e) => update({ selected_bullets: e.target.checked ? [...selBullets, i].sort((x, y) => x - y) : selBullets.filter((x) => x !== i) })} />
-              <span className="text-slate-700">{b}</span>
-            </label>
-          ))}
-        </>
-      )}
+      <div className="font-semibold">{data.company || '(company)'}</div>
+      {positions.map((p, i) => {
+        const descriptions: string[] = p.descriptions || []
+        const bullets: string[] = p.bullets || []
+        const selDesc: number | null = p.selected_description ?? (descriptions.length ? 0 : null)
+        const selBullets: number[] = p.selected_bullets ?? bullets.map((_: string, k: number) => k)
+        return (
+          <div key={i} className="mt-2 pl-3 border-l-2 border-slate-200">
+            <div className="font-medium">{p.job_title || '(role)'}
+              {dateRange(p) && <span className="text-xs text-slate-400"> · {dateRange(p)}</span>}</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-1 mb-1">Description (choose one)</div>
+            {descriptions.length === 0 && <p className="text-xs text-slate-400">No descriptions — add alternatives in the CV.</p>}
+            {descriptions.map((html, di) => (
+              <label key={di} className="flex gap-2 items-start mb-1 cursor-pointer">
+                <input type="radio" className="mt-1" checked={selDesc === di} onChange={() => setPos(i, { selected_description: di })} />
+                <span className="text-slate-700" dangerouslySetInnerHTML={{ __html: html || '<em>(empty)</em>' }} />
+              </label>
+            ))}
+            {bullets.length > 0 && (
+              <>
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-1 mb-1">Bullets (select any)</div>
+                {bullets.map((b, bi) => (
+                  <label key={bi} className="flex gap-2 items-start mb-1 cursor-pointer">
+                    <input type="checkbox" className="mt-1" checked={selBullets.includes(bi)}
+                      onChange={(e) => setPos(i, { selected_bullets: e.target.checked ? [...selBullets, bi].sort((x, y) => x - y) : selBullets.filter((x) => x !== bi) })} />
+                    <span className="text-slate-700">{b}</span>
+                  </label>
+                ))}
+              </>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

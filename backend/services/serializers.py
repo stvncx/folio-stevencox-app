@@ -24,10 +24,10 @@ def serialize_cv(cv) -> dict:
     return {'sections': sections}
 
 
-def _resolve_entry_data(data: dict) -> dict:
+def _resolve_selection(d: dict) -> dict:
     """Resolve a per-resume selection (chosen description + chosen bullets) into a
     flat description/bullets so downstream AI/output honours the user's choice."""
-    d = dict(data or {})
+    d = dict(d or {})
     if 'descriptions' in d:
         descs = d.get('descriptions') or []
         sel = d.get('selected_description')
@@ -41,6 +41,15 @@ def _resolve_entry_data(data: dict) -> dict:
         d['bullets'] = [bullets[i] for i in sel if isinstance(i, int) and 0 <= i < len(bullets)]
         d.pop('selected_bullets', None)
     return d
+
+
+def _resolve_entry_data(data: dict) -> dict:
+    """Resolve selections; for grouped experience, resolve each position."""
+    d = dict(data or {})
+    if isinstance(d.get('positions'), list):
+        d['positions'] = [_resolve_selection(p) for p in d['positions']]
+        return d
+    return _resolve_selection(d)
 
 
 def serialize_topical(topical) -> dict:

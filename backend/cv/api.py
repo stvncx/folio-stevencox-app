@@ -42,6 +42,12 @@ def _validate(section_type, data):
                if f not in BOOLEAN_FIELDS and data.get(f) in (None, '')]
     if missing:
         raise HttpError(400, f'Missing required fields for {section_type}: {", ".join(missing)}')
+    if section_type == 'experience':
+        positions = data.get('positions')
+        if not isinstance(positions, list) or not positions:
+            raise HttpError(400, 'Experience needs at least one position.')
+        if any(not (p.get('job_title') or '').strip() for p in positions):
+            raise HttpError(400, 'Each position needs a job title.')
 
 
 def _entry_dict(e):
