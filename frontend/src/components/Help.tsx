@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
-type HelpEntry = { match: RegExp; title: string; items: [string, string][] }
+type HelpEntry = { match: RegExp; title: string; intro: string; items: [string, string][] }
 
 // Ordered most-specific first; the first matching pattern wins.
 const HELP: HelpEntry[] = [
   {
     match: /^\/dashboard/, title: 'Dashboard',
+    intro: 'Your job-search home base — a single view of how many applications you have, where they stand, what is coming up, and how the companies you have analyzed stack up.',
     items: [
       ['Total applications', 'The number of job applications you are tracking.'],
       ['Status cards', 'How many applications sit in each stage — Saved, Applied, Phone Screen, Interview, Offer, Rejected, Withdrawn.'],
@@ -18,6 +19,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/topical\/\d+\/custom\/\d+\/preview/, title: 'Custom Resume Preview',
+    intro: 'See exactly how this job-tailored resume will look as a finished document, and print or save it as a PDF to send.',
     items: [
       ['Resume page', 'A formatted, read-only render of this custom resume — what it looks like as a document.'],
       ['Print / Save PDF', 'Opens your browser print dialog; choose “Save as PDF” to export. Editing controls are hidden in print.'],
@@ -26,6 +28,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/topical\/\d+\/custom\/new/, title: 'New Custom Resume',
+    intro: 'Create a job-specific version of a resume — either AI-tailored to a particular posting, or copied from your topical resume so you can edit it by hand.',
     items: [
       ['Generate with AI', 'Creates a resume tailored to a specific job posting using your topical resume as the source. Needs the position description.'],
       ['Position description', 'Paste a link (Fetch pulls the text), upload a PDF (text is extracted), or paste the text directly.'],
@@ -35,6 +38,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/topical\/\d+\/custom\/\d+/, title: 'Custom Resume Editor',
+    intro: 'Hand-tune one job-specific resume: rename it, add or remove sections and entries, reorder everything, and preview or print the result.',
     items: [
       ['Name field', 'Click to rename this custom resume; it saves when you click away.'],
       ['Add section (left)', 'Adds a new section of the chosen type to this resume.'],
@@ -47,6 +51,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/topical\/\d+\/custom/, title: 'Custom Resumes',
+    intro: 'All the job-tailored resumes built from this topical resume, in one place — open one to edit, or create a new one.',
     items: [
       ['Custom resume list', 'Every custom (job-tailored) resume under this topical resume. Click one to edit it.'],
       ['New', 'Create another custom resume (AI-tailored or copied).'],
@@ -54,6 +59,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/topical\/\d+\/preview/, title: 'Resume Preview',
+    intro: 'A formatted, read-only view of this topical resume — what it looks like with the descriptions and bullets you selected — ready to print or save as a PDF.',
     items: [
       ['Resume page', 'A formatted, read-only render of this topical resume, using your selected descriptions, checked bullets, dates and theme.'],
       ['Print / Save PDF', 'Opens the print dialog; choose “Save as PDF” to export.'],
@@ -62,6 +68,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/topical\/\d+/, title: 'Topical Resume Editor',
+    intro: 'Build a focused resume for a type of role by pulling relevant entries from your CV, then choosing which description and bullets to show for each job. This becomes the base for AI-tailored custom resumes.',
     items: [
       ['Left panel (CV entries)', 'Your master CV content. Click an entry to add it to this topical resume.'],
       ['Right panel (sections)', 'The sections and entries included in this resume. Drag to reorder; toggle a section active/inactive.'],
@@ -73,6 +80,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/topical/, title: 'Resumes (Topical)',
+    intro: 'Your collection of role-focused resumes. Each topical resume targets a kind of job and holds its own job-tailored custom versions underneath it.',
     items: [
       ['Topical resume cards', 'Each is a focused resume for a type of role, built by selecting from your CV.'],
       ['Custom resumes (under each card)', 'Job-tailored versions of that resume. Click one to open it, or “+ New custom resume”.'],
@@ -84,6 +92,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/cv/, title: 'CV (Master Profile)',
+    intro: 'Your complete career record — the single source of truth that every resume is built from. Put everything here once; you pick and choose from it when building targeted resumes.',
     items: [
       ['Add section (left)', 'Add any of the standard sections (Contact, Headline, About, Experience, Education, Skills, …) to your master CV.'],
       ['Section cards', 'Your full career history. This is the source everything else is built from. Drag to reorder.'],
@@ -94,6 +103,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/applications\/new/, title: 'New Application',
+    intro: 'Start tracking a job you want to apply for. Capture the basics now; you can add the resume, cover letter, contacts, and company analysis on the detail page afterward.',
     items: [
       ['Company / Position', 'The employer and role you are applying for.'],
       ['Status', 'Where this application stands (Saved, Applied, Interview, …).'],
@@ -103,6 +113,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/applications\/\d+/, title: 'Application Detail',
+    intro: 'Everything about one job application in one place: its status and key dates, the linked resume, the position description, an AI company/fit analysis, your cover letter, contacts, and a log of activity.',
     items: [
       ['Position / Company (top)', 'Click either to edit it inline; saves when you click away.'],
       ['Tabs', 'Overview, Cover Letter, Contacts, and Activity for this application.'],
@@ -117,6 +128,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/applications/, title: 'Applications',
+    intro: 'The master list of every job you are tracking. Filter by stage, see fit ratings at a glance, and open any application to manage it.',
     items: [
       ['Status filter chips', 'Filter the table to one stage, or “All”.'],
       ['Table rows', 'Each tracked application. Click the company to open it.'],
@@ -126,6 +138,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/profile/, title: 'My Profile',
+    intro: 'Tell the app who you are and what you want from a job. This information powers the AI fit assessment that judges how well a company suits you — the more you fill in, the sharper it gets.',
     items: [
       ['About me', 'Who you are professionally — background, strengths, what you are looking for.'],
       ['Job preferences', 'Remote/hybrid, company size, industry, compensation, location, etc.'],
@@ -137,6 +150,7 @@ const HELP: HelpEntry[] = [
   },
   {
     match: /^\/settings\/theme/, title: 'Theme',
+    intro: 'Control the look of your resumes and the app — set the colors and an optional custom font used across your documents.',
     items: [
       ['Primary / Accent color', 'The colors used across your resumes and the app interface.'],
       ['Font upload', 'Upload a custom font (.ttf/.otf/.woff) to use in your documents.'],
@@ -162,7 +176,8 @@ export function HelpButton() {
             </div>
             {entry ? (
               <>
-                <p className="text-sm text-slate-500 mb-4">What each element on this page does:</p>
+                <p className="text-sm text-slate-700 mb-4">{entry.intro}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">What each element does</p>
                 <dl className="space-y-3">
                   {entry.items.map(([el, desc], i) => (
                     <div key={i} className="border-b border-slate-100 pb-3 last:border-0">
