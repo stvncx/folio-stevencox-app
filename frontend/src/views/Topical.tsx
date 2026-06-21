@@ -92,6 +92,7 @@ export function TopicalList() {
             <div className="flex items-center justify-between mt-3 text-xs text-slate-400">
               <span>{t.custom_count} custom · {new Date(t.created_at).toLocaleDateString()}</span>
               <div className="flex gap-1">
+                <Link to={`/topical/${t.id}/preview`}><Button variant="ghost">Preview</Button></Link>
                 <Link to={`/topical/${t.id}/custom`}><Button variant="ghost">Custom</Button></Link>
                 <Button variant="ghost" onClick={() => { if (confirmAction('Delete this topical resume and all its custom resumes?')) del.mutate(t.id) }}>Delete</Button>
               </div>
@@ -191,7 +192,10 @@ export function TopicalEditor() {
           <h1 className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>{t.title}</h1>
           <p className="text-sm text-slate-500">{t.description}</p>
         </div>
-        <Link to={`/topical/${tid}/custom`}><Button variant="outline">Custom resumes →</Button></Link>
+        <div className="flex gap-2">
+          <Link to={`/topical/${tid}/preview`}><Button variant="outline">Preview</Button></Link>
+          <Link to={`/topical/${tid}/custom`}><Button variant="outline">Custom resumes →</Button></Link>
+        </div>
       </div>
       <div className="flex gap-4">
         {/* left: CV picker */}

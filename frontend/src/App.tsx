@@ -8,6 +8,7 @@ import { Layout } from './components/Layout'
 import { Login } from './views/Login'
 import { CV } from './views/CV'
 import { TopicalEditor, TopicalList, TopicalNew } from './views/Topical'
+import { TopicalPreview } from './views/Preview'
 import { CustomEditor, CustomList, CustomNew } from './views/Custom'
 import { ApplicationDetail, ApplicationNew, ApplicationsList } from './views/Applications'
 import { ThemeSettings } from './views/Theme'
@@ -33,6 +34,7 @@ export default function App() {
                   <Route path="/topical" element={<TopicalList />} />
                   <Route path="/topical/new" element={<TopicalNew />} />
                   <Route path="/topical/:id" element={<TopicalEditor />} />
+                  <Route path="/topical/:id/preview" element={<TopicalPreview />} />
                   <Route path="/topical/:id/custom" element={<CustomList />} />
                   <Route path="/topical/:id/custom/new" element={<CustomNew />} />
                   <Route path="/topical/:id/custom/:cid" element={<CustomEditor />} />

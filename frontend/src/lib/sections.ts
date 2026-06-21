@@ -212,6 +212,22 @@ export function positionLocation(exp: { location?: string; use_company_location?
   return exp.use_company_location ? (exp.location || '') : (p.location || '')
 }
 
+// Resolve a per-resume selection (mirrors the backend) for preview/output.
+export function selectedDescription(p: { descriptions?: string[]; selected_description?: number | null; description?: string }): string {
+  if (Array.isArray(p.descriptions)) {
+    const sel = p.selected_description
+    if (typeof sel === 'number' && p.descriptions[sel] !== undefined) return p.descriptions[sel]
+    return p.descriptions[0] || ''
+  }
+  return p.description || ''
+}
+
+export function selectedBullets(p: { bullets?: string[]; selected_bullets?: number[] }): string[] {
+  const bullets = p.bullets || []
+  if (Array.isArray(p.selected_bullets)) return p.selected_bullets.filter((i) => i >= 0 && i < bullets.length).map((i) => bullets[i])
+  return bullets
+}
+
 // A short human label for an entry, for list rows.
 export function entryTitle(sectionType: string, data: Record<string, unknown>): string {
   const d = data || {}
