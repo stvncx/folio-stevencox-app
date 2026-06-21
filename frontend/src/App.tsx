@@ -12,6 +12,7 @@ import { CustomPreview, TopicalPreview } from './views/Preview'
 import { CustomEditor, CustomList, CustomNew } from './views/Custom'
 import { ApplicationDetail, ApplicationNew, ApplicationsList } from './views/Applications'
 import { ThemeSettings } from './views/Theme'
+import { Dashboard } from './views/Dashboard'
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } })
 
@@ -39,6 +40,7 @@ export default function App() {
                   <Route path="/topical/:id/custom/new" element={<CustomNew />} />
                   <Route path="/topical/:id/custom/:cid" element={<CustomEditor />} />
                   <Route path="/topical/:id/custom/:cid/preview" element={<CustomPreview />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/applications" element={<ApplicationsList />} />
                   <Route path="/applications/new" element={<ApplicationNew />} />
                   <Route path="/applications/:id" element={<ApplicationDetail />} />

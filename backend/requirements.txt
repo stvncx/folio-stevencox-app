@@ -8,3 +8,4 @@ anthropic
 django-environ
 django-cors-headers
 Pillow
+pypdf==6.13.3

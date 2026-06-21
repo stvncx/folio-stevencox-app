@@ -11,6 +11,7 @@ export function Layout() {
     <div className="min-h-full flex flex-col">
       <nav className="no-print flex items-center gap-1 px-5 h-14 border-b border-slate-200 bg-white">
         <Link to="/cv" className="font-bold text-lg mr-4" style={{ color: 'var(--color-primary)' }}>Folio</Link>
+        <NavLink to="/dashboard" className={link}>Dashboard</NavLink>
         <NavLink to="/cv" className={link}>CV</NavLink>
         <NavLink to="/topical" className={link}>Resumes</NavLink>
         <NavLink to="/applications" className={link}>Applications</NavLink>

@@ -21,6 +21,7 @@ class JobApplication(models.Model):
     company_name = models.CharField(max_length=200)
     position_title = models.CharField(max_length=200)
     job_posting = models.TextField(blank=True)
+    job_posting_url = models.URLField(blank=True)
     status = models.CharField(max_length=20, choices=ApplicationStatus.choices,
                               default=ApplicationStatus.SAVED)
     applied_date = models.DateField(null=True, blank=True)

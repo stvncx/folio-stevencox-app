@@ -5,6 +5,7 @@ import { apiDelete, apiGet, apiPatch, apiPost } from '../lib/api'
 import { useGenerate } from '../lib/generate'
 import { SECTION_LABEL, SECTION_TYPES, entryTitle } from '../lib/sections'
 import { EntryForm } from '../components/EntryForm'
+import { JobPostingInput } from '../components/JobPostingInput'
 import { Sortable } from '../components/Sortable'
 import { Button, Card, Spinner, confirmAction, input, useToast } from '../components/ui'
 
@@ -73,7 +74,7 @@ export function CustomNew() {
           <input className={input} placeholder="Company" value={f.company_name} onChange={(e) => set('company_name', e.target.value)} />
           <input className={input} placeholder="Position" value={f.position_title} onChange={(e) => set('position_title', e.target.value)} />
         </div>
-        <textarea className={input} rows={6} placeholder="Paste the full job posting here…" value={f.job_posting} onChange={(e) => set('job_posting', e.target.value)} />
+        <JobPostingInput value={f.job_posting} onChange={(t) => set('job_posting', t)} />
         <div className="mt-3"><Button onClick={runAI} disabled={gen.streaming}>{gen.streaming ? 'Generating…' : 'Generate'}</Button></div>
         {(gen.streaming || gen.preview || gen.error) && (
           <div className="mt-3">
@@ -127,9 +128,12 @@ export function CustomEditor() {
   return (
     <div className="p-4">
       <div className="flex items-center justify-between mb-3 no-print">
-        <input className="text-xl font-bold bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-400 focus:outline-none px-1"
-          style={{ color: 'var(--color-primary)' }} defaultValue={c.title}
-          onBlur={(e) => { if (e.target.value.trim() && e.target.value !== c.title) saveTitle.mutate(e.target.value.trim()) }} />
+        <label className="flex items-center gap-2">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Name</span>
+          <input className="text-xl font-bold bg-white border border-slate-200 rounded px-2 py-0.5 hover:border-slate-300 focus:border-slate-400 focus:outline-none"
+            style={{ color: 'var(--color-primary)' }} defaultValue={c.title} title="Click to rename"
+            onBlur={(e) => { if (e.target.value.trim() && e.target.value !== c.title) saveTitle.mutate(e.target.value.trim()) }} />
+        </label>
         <div className="flex gap-2">
           <Link to={`/topical/${tid}/custom/${cidN}/preview`}><Button variant="outline">Preview</Button></Link>
           <Link to={`/topical/${tid}/custom`}><Button variant="ghost">Back</Button></Link>

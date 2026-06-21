@@ -1,8 +1,13 @@
+import html as _html
+import io
+import re
 from datetime import date, datetime
 from typing import Optional
 
-from ninja import Router, Schema
+from django.db.models import Count
+from ninja import File, Router, Schema
 from ninja.errors import HttpError
+from ninja.files import UploadedFile
 
 from applications.models import (ApplicationActivity, ApplicationContact,
                                  JobApplication)
@@ -40,7 +45,7 @@ def _activity_d(a):
 
 def _app_d(a, full=False):
     d = {'id': a.id, 'company_name': a.company_name, 'position_title': a.position_title,
-         'status': a.status, 'job_posting': a.job_posting,
+         'status': a.status, 'job_posting': a.job_posting, 'job_posting_url': a.job_posting_url,
          'custom_resume_id': a.custom_resume_id,
          'applied_date': a.applied_date.isoformat() if a.applied_date else None,
          'follow_up_date': a.follow_up_date.isoformat() if a.follow_up_date else None,
@@ -58,6 +63,7 @@ class AppIn(Schema):
     company_name: str
     position_title: str
     job_posting: str = ''
+    job_posting_url: str = ''
     status: str = 'saved'
     applied_date: Optional[date] = None
     follow_up_date: Optional[date] = None
@@ -70,6 +76,7 @@ class AppPatch(Schema):
     company_name: Optional[str] = None
     position_title: Optional[str] = None
     job_posting: Optional[str] = None
+    job_posting_url: Optional[str] = None
     status: Optional[str] = None
     applied_date: Optional[date] = None
     follow_up_date: Optional[date] = None
@@ -114,9 +121,9 @@ def create_app(request, data: AppIn):
     c = _own_custom(request, data.custom_resume_id)
     a = JobApplication.objects.create(
         user=request.user, company_name=data.company_name, position_title=data.position_title,
-        job_posting=data.job_posting, status=data.status, applied_date=data.applied_date,
-        follow_up_date=data.follow_up_date, offer_deadline=data.offer_deadline,
-        notes=data.notes, custom_resume=c)
+        job_posting=data.job_posting, job_posting_url=data.job_posting_url, status=data.status,
+        applied_date=data.applied_date, follow_up_date=data.follow_up_date,
+        offer_deadline=data.offer_deadline, notes=data.notes, custom_resume=c)
     return _app_d(a, full=True)
 
 
@@ -220,3 +227,77 @@ def update_activity(request, aid: int, actid: int, data: ActivityIn):
 def delete_activity(request, aid: int, actid: int):
     _app(request, aid).activities.filter(id=actid).delete()
     return 204, None
+
+
+# ===========================================================================
+#  Job-description tools (PDF extract + URL fetch) and Dashboard
+# ===========================================================================
+jd_router = Router(tags=['jd'])
+dashboard_router = Router(tags=['dashboard'])
+
+
+@jd_router.post('/extract/')
+def extract_pdf(request, file: UploadedFile = File(...)):
+    """Extract text from an uploaded position-description PDF."""
+    if not (file.name or '').lower().endswith('.pdf'):
+        raise HttpError(400, 'Upload a PDF file.')
+    if file.size > 10 * 1024 * 1024:
+        raise HttpError(400, 'PDF must be 10 MB or smaller.')
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(file.read()))
+        text = '\n'.join((p.extract_text() or '') for p in reader.pages)
+    except Exception:
+        raise HttpError(400, 'Could not read that PDF — paste the text instead.')
+    return {'text': text.strip()}
+
+
+class UrlIn(Schema):
+    url: str
+
+
+@jd_router.post('/fetch/')
+def fetch_url(request, data: UrlIn):
+    """Best-effort fetch of a position-description URL → readable text."""
+    import httpx
+    url = data.url.strip()
+    if not url.startswith(('http://', 'https://')):
+        raise HttpError(400, 'Enter a valid http(s) URL.')
+    try:
+        r = httpx.get(url, follow_redirects=True, timeout=15.0,
+                      headers={'User-Agent': 'Mozilla/5.0 (compatible; FolioBot/1.0)'})
+        r.raise_for_status()
+        raw = r.text
+    except Exception:
+        raise HttpError(502, 'Could not fetch that URL — paste the description instead.')
+    raw = re.sub(r'(?is)<(script|style|noscript)[^>]*>.*?</\1>', ' ', raw)
+    text = _html.unescape(re.sub(r'(?s)<[^>]+>', ' ', raw))
+    text = '\n'.join(ln.strip() for ln in re.sub(r'[ \t]+', ' ', text).splitlines())
+    text = re.sub(r'\n{3,}', '\n\n', text).strip()
+    if len(text) < 50:
+        raise HttpError(502, 'Fetched the page but found little text — paste the description instead.')
+    return {'text': text[:20000], 'url': url}
+
+
+@dashboard_router.get('/')
+def dashboard(request):
+    apps = JobApplication.objects.filter(user=request.user)
+    by_status = {row['status']: row['c']
+                 for row in apps.values('status').annotate(c=Count('id')).order_by()}
+    upcoming = []
+    for a in apps.exclude(follow_up_date=None):
+        upcoming.append({'application_id': a.id, 'company': a.company_name,
+                         'position': a.position_title, 'type': 'Follow-up',
+                         'date': a.follow_up_date.isoformat()})
+    for a in apps.exclude(offer_deadline=None):
+        upcoming.append({'application_id': a.id, 'company': a.company_name,
+                         'position': a.position_title, 'type': 'Offer deadline',
+                         'date': a.offer_deadline.isoformat()})
+    upcoming.sort(key=lambda x: x['date'])
+    acts = (ApplicationActivity.objects.filter(application__user=request.user)
+            .select_related('application').order_by('-date')[:15])
+    recent = [{'application_id': x.application_id, 'company': x.application.company_name,
+               'activity_type': x.activity_type, 'title': x.title, 'date': x.date.isoformat()}
+              for x in acts]
+    return {'total': apps.count(), 'by_status': by_status,
+            'upcoming': upcoming[:10], 'recent_activity': recent}

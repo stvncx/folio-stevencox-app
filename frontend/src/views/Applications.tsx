@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../lib/api'
 import { useGenerate } from '../lib/generate'
 import { RichEditor } from '../components/Editor'
+import { JobPostingInput } from '../components/JobPostingInput'
 import { Button, Card, Spinner, input, useToast } from '../components/ui'
 
 const STATUSES = ['saved', 'applied', 'phone_screen', 'interview', 'offer', 'rejected', 'withdrawn']
@@ -71,7 +72,7 @@ export function ApplicationsList() {
 
 export function ApplicationNew() {
   const nav = useNavigate()
-  const [f, setF] = useState({ company_name: '', position_title: '', status: 'saved', job_posting: '' })
+  const [f, setF] = useState({ company_name: '', position_title: '', status: 'saved', job_posting: '', job_posting_url: '' })
   const set = (k: string, v: string) => setF((s) => ({ ...s, [k]: v }))
   const create = useMutation({ mutationFn: () => apiPost('/applications/', f), onSuccess: (a: any) => nav(`/applications/${a.id}`) })
   return (
@@ -83,7 +84,9 @@ export function ApplicationNew() {
         <select className={input + ' mb-2'} value={f.status} onChange={(e) => set('status', e.target.value)}>
           {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
         </select>
-        <textarea className={input + ' mb-3'} rows={4} placeholder="Job posting (optional)" value={f.job_posting} onChange={(e) => set('job_posting', e.target.value)} />
+        <div className="mb-3 text-sm"><span className="block mb-1 text-slate-600">Position description (optional)</span>
+          <JobPostingInput value={f.job_posting} onChange={(t) => set('job_posting', t)} url={f.job_posting_url} onUrlChange={(u) => set('job_posting_url', u)} />
+        </div>
         <Button disabled={!f.company_name || !f.position_title || create.isPending} onClick={() => create.mutate()}>Create</Button>
       </Card>
     </div>
@@ -138,6 +141,10 @@ export function ApplicationDetail() {
           <label className="text-sm block mt-3">Notes
             <textarea className={input} rows={4} defaultValue={a.notes} onBlur={(e) => patch.mutate({ notes: e.target.value })} />
           </label>
+          <div className="mt-3 text-sm">
+            <span className="block mb-1 text-slate-600">Position description</span>
+            <OverviewJobPosting a={a} patch={patch} />
+          </div>
         </Card>
       )}
 
@@ -145,6 +152,15 @@ export function ApplicationDetail() {
       {tab === 'contacts' && <ContactsTab aid={aid} contacts={a.contacts} refresh={refresh} />}
       {tab === 'activity' && <ActivityTab aid={aid} activities={a.activities} refresh={refresh} />}
     </div>
+  )
+}
+
+function OverviewJobPosting({ a, patch }: { a: any; patch: any }) {
+  const [text, setText] = useState(a.job_posting || '')
+  const [url, setUrl] = useState(a.job_posting_url || '')
+  return (
+    <JobPostingInput value={text} onChange={setText} url={url} onUrlChange={setUrl}
+      onCommit={(t, u) => patch.mutate({ job_posting: t, job_posting_url: u })} />
   )
 }
 
