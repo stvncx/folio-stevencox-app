@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth'
 import { Button } from './ui'
+import { HelpButton } from './Help'
 
 export function Layout() {
   const { user, logout } = useAuth()
@@ -21,7 +22,8 @@ export function Layout() {
           <a href="/admin/" className="px-3 py-1.5 rounded text-sm font-medium text-slate-600 hover:bg-slate-50">Admin</a>
         )}
         <div className="flex-1" />
-        <span className="text-xs text-slate-400 mr-2">{user?.username}</span>
+        <HelpButton />
+        <span className="text-xs text-slate-400 mx-2">{user?.username}</span>
         <Button variant="outline" onClick={() => { logout(); nav('/login') }}>Log out</Button>
       </nav>
       <main className="flex-1"><Outlet /></main>
