@@ -11,7 +11,13 @@ export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
   saving?: boolean
 }) {
   const fields = FIELDS[sectionType] || []
-  const [data, setData] = useState<Record<string, any>>(initial ? { ...initial } : {})
+  const [data, setData] = useState<Record<string, any>>(() => {
+    const init: Record<string, any> = initial ? { ...initial } : {}
+    // Checkboxes only land in state when toggled; seed them to false so an
+    // untouched box is still sent (an unchecked box is a valid `false`).
+    for (const f of fields) if (f.type === 'checkbox' && init[f.key] === undefined) init[f.key] = false
+    return init
+  })
   const set = (k: string, v: any) => setData((d) => ({ ...d, [k]: v }))
   const isCurrent = !!data.is_current
   const [error, setError] = useState('')

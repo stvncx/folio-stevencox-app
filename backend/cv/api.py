@@ -32,11 +32,14 @@ def _entry(request, sid, eid):
     return e
 
 
+# Boolean (checkbox) fields are never "missing" — an absent/unchecked box is a
+# valid False, so they are excluded from the required-field check.
+BOOLEAN_FIELDS = {'is_current', 'does_not_expire'}
+
+
 def _validate(section_type, data):
     missing = [f for f in REQUIRED_FIELDS.get(section_type, [])
-               if data.get(f) in (None, '')]
-    # booleans: required boolean present even if False
-    missing = [f for f in missing if not (isinstance(data.get(f), bool))]
+               if f not in BOOLEAN_FIELDS and data.get(f) in (None, '')]
     if missing:
         raise HttpError(400, f'Missing required fields for {section_type}: {", ".join(missing)}')
 
