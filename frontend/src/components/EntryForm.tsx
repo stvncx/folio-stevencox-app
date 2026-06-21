@@ -16,6 +16,11 @@ export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
     // Checkboxes only land in state when toggled; seed them to false so an
     // untouched box is still sent (an unchecked box is a valid `false`).
     for (const f of fields) if (f.type === 'checkbox' && init[f.key] === undefined) init[f.key] = false
+    // Migrate a legacy single `description` into the `descriptions` pool.
+    if (init.description && init.descriptions === undefined && fields.some((f) => f.key === 'descriptions')) {
+      init.descriptions = [init.description]
+      delete init.description
+    }
     return init
   })
   const set = (k: string, v: any) => setData((d) => ({ ...d, [k]: v }))
@@ -54,6 +59,24 @@ export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
             <RichEditor value={v || ''} onChange={(html) => set(f.key, html)} />
           </div>
         )
+        if (f.type === 'richlist') {
+          const list: string[] = Array.isArray(v) ? v : []
+          return (
+            <div key={f.key} className="mb-3">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">{f.label}</span>
+              {list.map((html, i) => (
+                <div key={i} className="mb-2 border border-slate-200 rounded p-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-slate-400">Description {i + 1}</span>
+                    <Button variant="ghost" type="button" onClick={() => set(f.key, list.filter((_, j) => j !== i))}>Remove</Button>
+                  </div>
+                  <RichEditor value={html} onChange={(h) => set(f.key, list.map((x, j) => (j === i ? h : x)))} />
+                </div>
+              ))}
+              <Button variant="outline" type="button" onClick={() => set(f.key, [...list, ''])}>+ Add description</Button>
+            </div>
+          )
+        }
         if (f.type === 'textarea') return (
           <Field key={f.key} label={f.label}>
             <textarea className={input} rows={3} value={v || ''} onChange={(e) => set(f.key, e.target.value)} />

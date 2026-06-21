@@ -8,6 +8,55 @@ import { EntryForm } from '../components/EntryForm'
 import { Sortable } from '../components/Sortable'
 import { Button, Card, Spinner, confirmAction, input, useToast } from '../components/ui'
 
+// Normalise an experience entry's data into pool + selection (defaults: first
+// description, all bullets) so it can be mixed-and-matched per resume.
+function prepExperience(data: any) {
+  const descriptions: string[] = Array.isArray(data.descriptions)
+    ? data.descriptions : (data.description ? [data.description] : [])
+  const bullets: string[] = Array.isArray(data.bullets) ? data.bullets : []
+  return {
+    ...data, descriptions, bullets,
+    selected_description: descriptions.length ? 0 : null,
+    selected_bullets: bullets.map((_, i) => i),
+  }
+}
+
+// Per-resume selection for one experience job: choose one description, check
+// which bullets to include. Saves silently (no refetch) for snappy toggling.
+function ExperienceSelection({ entry, save }: { entry: any; save: (data: any) => void }) {
+  const [data, setData] = useState<any>(() => prepExperience(entry.data))
+  const descriptions: string[] = data.descriptions || []
+  const bullets: string[] = data.bullets || []
+  const selDesc: number | null = data.selected_description ?? (descriptions.length ? 0 : null)
+  const selBullets: number[] = data.selected_bullets ?? bullets.map((_: string, i: number) => i)
+  const update = (patch: any) => { const nd = { ...data, ...patch }; setData(nd); save(nd) }
+  return (
+    <div className="text-sm">
+      <div className="font-medium">{data.job_title} <span className="text-slate-400">· {data.company}</span></div>
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-2 mb-1">Description (choose one)</div>
+      {descriptions.length === 0 && <p className="text-xs text-slate-400">No descriptions — add alternatives in the CV.</p>}
+      {descriptions.map((html, i) => (
+        <label key={i} className="flex gap-2 items-start mb-1 cursor-pointer">
+          <input type="radio" className="mt-1" checked={selDesc === i} onChange={() => update({ selected_description: i })} />
+          <span className="prose-sm text-slate-700" dangerouslySetInnerHTML={{ __html: html || '<em>(empty)</em>' }} />
+        </label>
+      ))}
+      {bullets.length > 0 && (
+        <>
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-2 mb-1">Bullets (select any)</div>
+          {bullets.map((b, i) => (
+            <label key={i} className="flex gap-2 items-start mb-1 cursor-pointer">
+              <input type="checkbox" className="mt-1" checked={selBullets.includes(i)}
+                onChange={(e) => update({ selected_bullets: e.target.checked ? [...selBullets, i].sort((x, y) => x - y) : selBullets.filter((x) => x !== i) })} />
+              <span className="text-slate-700">{b}</span>
+            </label>
+          ))}
+        </>
+      )}
+    </div>
+  )
+}
+
 export function TopicalList() {
   const qc = useQueryClient(); const toast = useToast()
   const { data } = useQuery({ queryKey: ['topical'], queryFn: () => apiGet('/topical/') })
@@ -100,7 +149,8 @@ export function TopicalEditor() {
   const addFromCV = useMutation({
     mutationFn: async (e: { cvEntry: any; sectionType: string; sectionTitle: string }) => {
       const sec = await ensureSection(e.sectionType, e.sectionTitle)
-      return apiPost(`/topical/${tid}/sections/${sec.id}/entries/`, { cv_entry_id: e.cvEntry.id, data: e.cvEntry.data, order: 999 })
+      const data = e.sectionType === 'experience' ? prepExperience(e.cvEntry.data) : e.cvEntry.data
+      return apiPost(`/topical/${tid}/sections/${sec.id}/entries/`, { cv_entry_id: e.cvEntry.id, data, order: 999 })
     },
     onSuccess: () => { refresh(); toast('Added') },
   })
@@ -160,11 +210,18 @@ export function TopicalEditor() {
                     <Button variant="ghost" onClick={() => { if (confirmAction('Remove this section?')) delSection.mutate(s.id) }}>Delete</Button>
                   </div>
                   {s.entries.map((e: any) => (
-                    <div key={e.id} className="flex items-center justify-between border border-slate-100 rounded px-3 py-2 text-sm">
-                      <span className="truncate">{entryTitle(s.section_type, e.data)}</span>
-                      <div className="flex gap-1 shrink-0">
-                        <Button variant="ghost" onClick={() => setModal({ sectionId: s.id, sectionType: s.section_type, entry: e })}>Edit</Button>
-                        <Button variant="ghost" onClick={() => delEntry.mutate({ sid: s.id, eid: e.id })}>×</Button>
+                    <div key={e.id} className="border border-slate-100 rounded px-3 py-2 mb-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          {s.section_type === 'experience'
+                            ? <ExperienceSelection entry={e} save={(data) => apiPatch(`/topical/${tid}/sections/${s.id}/entries/${e.id}/`, { data })} />
+                            : <span className="text-sm truncate">{entryTitle(s.section_type, e.data)}</span>}
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          {s.section_type !== 'experience' &&
+                            <Button variant="ghost" onClick={() => setModal({ sectionId: s.id, sectionType: s.section_type, entry: e })}>Edit</Button>}
+                          <Button variant="ghost" onClick={() => delEntry.mutate({ sid: s.id, eid: e.id })}>×</Button>
+                        </div>
                       </div>
                     </div>
                   ))}

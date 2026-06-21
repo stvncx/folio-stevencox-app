@@ -24,15 +24,36 @@ def serialize_cv(cv) -> dict:
     return {'sections': sections}
 
 
+def _resolve_entry_data(data: dict) -> dict:
+    """Resolve a per-resume selection (chosen description + chosen bullets) into a
+    flat description/bullets so downstream AI/output honours the user's choice."""
+    d = dict(data or {})
+    if 'descriptions' in d:
+        descs = d.get('descriptions') or []
+        sel = d.get('selected_description')
+        d['description'] = (descs[sel] if isinstance(sel, int) and 0 <= sel < len(descs)
+                            else (descs[0] if descs else ''))
+        d.pop('descriptions', None)
+        d.pop('selected_description', None)
+    if 'selected_bullets' in d:
+        bullets = d.get('bullets') or []
+        sel = d.get('selected_bullets') or []
+        d['bullets'] = [bullets[i] for i in sel if isinstance(i, int) and 0 <= i < len(bullets)]
+        d.pop('selected_bullets', None)
+    return d
+
+
 def serialize_topical(topical) -> dict:
-    """Only ACTIVE sections and their selected entries (business rule 12)."""
+    """Only ACTIVE sections and their selected entries (business rule 12), with
+    each entry's per-resume selection resolved."""
     sections = []
     for s in topical.sections.filter(is_active=True).prefetch_related('entries'):
         sections.append({
             'section_type': s.section_type,
             'title': s.title,
             'order': s.order,
-            'entries': [{'topical_entry_id': e.id, 'order': e.order, 'data': e.data}
+            'entries': [{'topical_entry_id': e.id, 'order': e.order,
+                         'data': _resolve_entry_data(e.data)}
                         for e in s.entries.all()],
         })
     return {'title': topical.title, 'description': topical.description, 'sections': sections}

@@ -4,7 +4,7 @@
 export interface FieldDef {
   key: string
   label: string
-  type: 'text' | 'textarea' | 'rich' | 'month' | 'checkbox' | 'bullets'
+  type: 'text' | 'textarea' | 'rich' | 'month' | 'checkbox' | 'bullets' | 'richlist'
   required?: boolean
 }
 
@@ -40,8 +40,8 @@ export const FIELDS: Record<string, FieldDef[]> = {
     { key: 'start_date', label: 'Start (YYYY-MM)', type: 'month', required: true },
     { key: 'is_current', label: 'I currently work here', type: 'checkbox', required: true },
     { key: 'end_date', label: 'End (YYYY-MM)', type: 'month' },
-    { key: 'description', label: 'Description', type: 'rich' },
-    { key: 'bullets', label: 'Accomplishments', type: 'bullets' },
+    { key: 'descriptions', label: 'Descriptions (add alternatives — pick one per resume)', type: 'richlist' },
+    { key: 'bullets', label: 'Accomplishments (selectable per resume)', type: 'bullets' },
   ],
   education: [
     { key: 'school', label: 'School', type: 'text', required: true },
