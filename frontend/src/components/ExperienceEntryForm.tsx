@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { RichEditor } from './Editor'
+import { BulletEditor, RichEditor } from './Editor'
 import { emptyPosition, normalizeExperience, type Position } from '../lib/sections'
 import { Button, Field, input } from './ui'
 
@@ -62,8 +62,8 @@ export function ExperienceEntryForm({ initial, onSave, onCancel, saving }: {
 
           <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">Bullets (selectable per resume)</span>
           {(p.bullets || []).map((b, bi) => (
-            <div key={bi} className="flex gap-2 mb-1">
-              <input className={input} value={b} onChange={(e) => setPos(i, { bullets: (p.bullets || []).map((x, j) => (j === bi ? e.target.value : x)) })} />
+            <div key={bi} className="flex gap-2 mb-1 items-start">
+              <BulletEditor value={b} onChange={(h) => setPos(i, { bullets: (p.bullets || []).map((x, j) => (j === bi ? h : x)) })} />
               <Button variant="ghost" type="button" onClick={() => setPos(i, { bullets: (p.bullets || []).filter((_, j) => j !== bi) })}>×</Button>
             </div>
           ))}

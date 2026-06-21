@@ -58,7 +58,7 @@ function ExperienceSelection({ entry, save }: { entry: any; save: (data: any) =>
                   <label key={bi} className="flex gap-2 items-start mb-1 cursor-pointer">
                     <input type="checkbox" className="mt-1" checked={selBullets.includes(bi)}
                       onChange={(e) => setPos(i, { selected_bullets: e.target.checked ? [...selBullets, bi].sort((x, y) => x - y) : selBullets.filter((x) => x !== bi) })} />
-                    <span className="text-slate-700">{b}</span>
+                    <span className="text-slate-700" dangerouslySetInnerHTML={{ __html: (b || '').replace(/<\/?p>/g, '') }} />
                   </label>
                 ))}
               </>

@@ -21,6 +21,13 @@ body {
 .tiptap td, .tiptap th { border: 1px solid #cbd5e1; padding: 4px 8px; min-width: 40px; }
 .tiptap a { color: var(--color-accent); text-decoration: underline; }
 
+/* Single-line bullet editor */
+.tiptap-bullet { padding: 6px 10px; font-size: 13px; }
+.tiptap-bullet:focus { outline: none; }
+.tiptap-bullet p { margin: 0; }
+.tiptap-bullet strong { font-weight: 700; }
+.tiptap-bullet em { font-style: italic; }
+
 /* Print: clean resume output (no app chrome) */
 @media print {
   .no-print { display: none !important; }

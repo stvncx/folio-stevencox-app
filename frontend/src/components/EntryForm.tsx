@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { FIELDS, toMonthYear } from '../lib/sections'
-import { RichEditor } from './Editor'
+import { BulletEditor, RichEditor } from './Editor'
 import { ExperienceEntryForm } from './ExperienceEntryForm'
 import { Button, Field, input } from './ui'
 
@@ -91,9 +91,8 @@ export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
         if (f.type === 'bullets') return (
           <Field key={f.key} label={f.label}>
             {bullets.map((b, i) => (
-              <div key={i} className="flex gap-2 mb-1">
-                <input className={input} value={b}
-                  onChange={(e) => set('bullets', bullets.map((x, j) => j === i ? e.target.value : x))} />
+              <div key={i} className="flex gap-2 mb-1 items-start">
+                <BulletEditor value={b} onChange={(h) => set('bullets', bullets.map((x, j) => j === i ? h : x))} />
                 <Button variant="ghost" type="button" onClick={() => set('bullets', bullets.filter((_, j) => j !== i))}>×</Button>
               </div>
             ))}

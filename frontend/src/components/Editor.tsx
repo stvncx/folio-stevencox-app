@@ -52,3 +52,32 @@ export function RichEditor({ value, onChange }: { value: string; onChange: (html
     </div>
   )
 }
+
+// Minimal single-line editor for a bullet: bold/italic only, with native
+// Ctrl/Cmd+B and Ctrl/Cmd+I hotkeys plus tiny B/I buttons.
+export function BulletEditor({ value, onChange }: { value: string; onChange: (html: string) => void }) {
+  const editor = useEditor({
+    extensions: [StarterKit.configure({
+      heading: false, bulletList: false, orderedList: false, listItem: false,
+      blockquote: false, codeBlock: false, horizontalRule: false, strike: false, code: false,
+    })],
+    content: value || '',
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+  })
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) editor.commands.setContent(value || '', { emitUpdate: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+  if (!editor) return null
+  return (
+    <div className="flex-1 border border-slate-300 rounded flex items-stretch bg-white">
+      <EditorContent editor={editor} className="tiptap-bullet flex-1" />
+      <div className="flex items-center gap-0.5 px-1 border-l border-slate-200">
+        <button type="button" title="Bold (Ctrl/Cmd+B)" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleBold().run() }}
+          className={`w-6 h-6 text-xs rounded ${editor.isActive('bold') ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-100'}`}><b>B</b></button>
+        <button type="button" title="Italic (Ctrl/Cmd+I)" onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleItalic().run() }}
+          className={`w-6 h-6 text-xs rounded ${editor.isActive('italic') ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-100'}`}><i>I</i></button>
+      </div>
+    </div>
+  )
+}
