@@ -73,6 +73,23 @@ function ExperienceSelection({ entry, save }: { entry: any; save: (data: any) =>
   )
 }
 
+function CustomLinks({ tid }: { tid: number }) {
+  const { data } = useQuery({ queryKey: ['custom', tid], queryFn: () => apiGet(`/topical/${tid}/custom/`) })
+  return (
+    <div className="mt-2 border-t border-slate-100 pt-2">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Custom resumes</div>
+      {data && data.length === 0 && <p className="text-xs text-slate-400">None yet.</p>}
+      {data?.map((c: any) => (
+        <Link key={c.id} to={`/topical/${tid}/custom/${c.id}`} className="flex items-center justify-between text-sm py-0.5 hover:underline">
+          <span className="truncate">{c.title}</span>
+          <span className="text-xs text-slate-400 shrink-0 ml-2">{c.generation_method === 'copied' ? 'copied' : 'AI'}</span>
+        </Link>
+      ))}
+      <Link to={`/topical/${tid}/custom/new`} className="inline-block text-xs mt-1" style={{ color: 'var(--color-accent)' }}>+ New custom resume</Link>
+    </div>
+  )
+}
+
 export function TopicalList() {
   const qc = useQueryClient(); const toast = useToast()
   const { data } = useQuery({ queryKey: ['topical'], queryFn: () => apiGet('/topical/') })
@@ -89,11 +106,12 @@ export function TopicalList() {
           <Card key={t.id} className="p-4">
             <Link to={`/topical/${t.id}`} className="font-semibold hover:underline">{t.title}</Link>
             <p className="text-sm text-slate-500 line-clamp-2 mt-1">{t.description}</p>
+            <CustomLinks tid={t.id} />
             <div className="flex items-center justify-between mt-3 text-xs text-slate-400">
-              <span>{t.custom_count} custom · {new Date(t.created_at).toLocaleDateString()}</span>
+              <span>{new Date(t.created_at).toLocaleDateString()}</span>
               <div className="flex gap-1">
+                <Link to={`/topical/${t.id}`}><Button variant="ghost">Edit</Button></Link>
                 <Link to={`/topical/${t.id}/preview`}><Button variant="ghost">Preview</Button></Link>
-                <Link to={`/topical/${t.id}/custom`}><Button variant="ghost">Custom</Button></Link>
                 <Button variant="ghost" onClick={() => { if (confirmAction('Delete this topical resume and all its custom resumes?')) del.mutate(t.id) }}>Delete</Button>
               </div>
             </div>

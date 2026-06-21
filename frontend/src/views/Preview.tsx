@@ -9,11 +9,16 @@ import { Button, Spinner } from '../components/ui'
 const stripP = (s: string) => (s || '').replace(/<\/?p>/g, '')
 
 function ContactHeader({ data }: { data: any }) {
-  const bits = [data.location, data.email, data.phone, data.website, data.linkedin].filter(Boolean)
+  const bits = [data.location, data.email, data.phone, data.website].filter(Boolean)
   return (
     <div className="text-center mb-4">
       <div className="text-2xl font-bold" style={{ color: 'var(--color-primary)' }}>{data.full_name}</div>
       {bits.length > 0 && <div className="text-sm text-slate-600 mt-1">{bits.join('  ·  ')}</div>}
+      {data.linkedin && (
+        <div className="text-sm mt-0.5">
+          <a href={data.linkedin} style={{ color: 'var(--color-accent)' }}>{data.linkedin}</a>
+        </div>
+      )}
     </div>
   )
 }
