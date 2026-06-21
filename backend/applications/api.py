@@ -46,9 +46,17 @@ def _activity_d(a):
             'title': a.title, 'notes': a.notes}
 
 
+def _fit_of(analysis: str) -> str:
+    """Pull the 'Fit: Strong|Moderate|Weak' rating out of an analysis."""
+    if not analysis:
+        return ''
+    m = re.search(r'Fit:\s*(Strong|Moderate|Weak)', analysis, re.IGNORECASE)
+    return m.group(1).capitalize() if m else ''
+
+
 def _app_d(a, full=False):
     d = {'id': a.id, 'company_name': a.company_name, 'position_title': a.position_title,
-         'company_url': a.company_url, 'company_analysis': a.company_analysis,
+         'company_url': a.company_url, 'company_fit': _fit_of(a.company_analysis),
          'status': a.status, 'job_posting': a.job_posting, 'job_posting_url': a.job_posting_url,
          'custom_resume_id': a.custom_resume_id,
          'applied_date': a.applied_date.isoformat() if a.applied_date else None,
@@ -57,6 +65,7 @@ def _app_d(a, full=False):
          'notes': a.notes, 'cover_letter': a.cover_letter,
          'created_at': a.created_at.isoformat(), 'updated_at': a.updated_at.isoformat()}
     if full:
+        d['company_analysis'] = a.company_analysis
         d['contacts'] = [_contact_d(c) for c in a.contacts.all()]
         d['activities'] = [_activity_d(x) for x in a.activities.all()]
     return d
@@ -329,5 +338,10 @@ def dashboard(request):
     recent = [{'application_id': x.application_id, 'company': x.application.company_name,
                'activity_type': x.activity_type, 'title': x.title, 'date': x.date.isoformat()}
               for x in acts]
-    return {'total': apps.count(), 'by_status': by_status,
+    by_fit = {}
+    for a in apps.exclude(company_analysis=''):
+        f = _fit_of(a.company_analysis)
+        if f:
+            by_fit[f] = by_fit.get(f, 0) + 1
+    return {'total': apps.count(), 'by_status': by_status, 'by_fit': by_fit,
             'upcoming': upcoming[:10], 'recent_activity': recent}

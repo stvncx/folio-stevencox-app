@@ -26,6 +26,17 @@ export function Dashboard() {
         ))}
       </div>
 
+      {d.by_fit && Object.keys(d.by_fit).length > 0 && (
+        <Card className="p-4 mb-6">
+          <div className="text-xs text-slate-500 uppercase tracking-wide mb-2">Company fit (from AI analyses)</div>
+          <div className="flex gap-2 flex-wrap">
+            {['Strong', 'Moderate', 'Weak'].filter((k) => d.by_fit[k]).map((k) => (
+              <span key={k} className={`text-sm px-3 py-1 rounded-full font-medium ${k === 'Strong' ? 'bg-green-100 text-green-700' : k === 'Moderate' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>{k}: {d.by_fit[k]}</span>
+            ))}
+          </div>
+        </Card>
+      )}
+
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold mb-3" style={{ color: 'var(--color-primary)' }}>Upcoming dates</h2>

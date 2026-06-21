@@ -29,6 +29,13 @@ function useAllCustoms() {
   })
 }
 
+export function FitBadge({ fit }: { fit?: string }) {
+  if (!fit) return <span className="text-slate-300">—</span>
+  const color = fit === 'Strong' ? 'bg-green-100 text-green-700'
+    : fit === 'Moderate' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${color}`}>{fit} fit</span>
+}
+
 export function ApplicationsList() {
   const { data } = useQuery({ queryKey: ['apps'], queryFn: () => apiGet('/applications/') })
   const [filter, setFilter] = useState('all')
@@ -51,7 +58,7 @@ export function ApplicationsList() {
       <Card>
         <table className="w-full text-sm">
           <thead><tr className="text-left text-xs uppercase text-slate-500 border-b border-slate-200">
-            <th className="px-4 py-2">Company</th><th className="px-4 py-2">Position</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Applied</th>
+            <th className="px-4 py-2">Company</th><th className="px-4 py-2">Position</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Fit</th><th className="px-4 py-2">Applied</th>
           </tr></thead>
           <tbody>
             {rows.map((a: any) => (
@@ -59,10 +66,11 @@ export function ApplicationsList() {
                 <td className="px-4 py-2"><Link to={`/applications/${a.id}`} className="font-medium hover:underline">{a.company_name}</Link></td>
                 <td className="px-4 py-2">{a.position_title}</td>
                 <td className="px-4 py-2">{STATUS_LABEL[a.status]}</td>
+                <td className="px-4 py-2"><FitBadge fit={a.company_fit} /></td>
                 <td className="px-4 py-2 text-slate-500">{a.applied_date || '—'}</td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400">No applications. Add one to start tracking.</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">No applications. Add one to start tracking.</td></tr>}
           </tbody>
         </table>
       </Card>
