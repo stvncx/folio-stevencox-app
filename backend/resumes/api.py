@@ -7,7 +7,7 @@ from ninja.errors import HttpError
 from resumes.models import (CustomResume, CustomResumeEntry, CustomResumeSection,
                             TopicalResume, TopicalResumeEntry, TopicalResumeSection)
 from services.models import AIJob
-from services.serializers import deep_copy_custom
+from services.serializers import build_custom_from_topical, deep_copy_custom
 
 topical_router = Router(tags=['topical'])
 custom_router = Router(tags=['custom'])
@@ -332,6 +332,14 @@ def generate_custom(request, tid: int, data: CustomGenIn):
         params={'topical_id': tid, 'title': data.title, 'job_posting': data.job_posting,
                 'company_name': data.company_name, 'position_title': data.position_title})
     return {'job_id': job.id, 'ws': '/ws/ai/custom/generate/'}
+
+
+@topical_router.post('/{tid}/custom/from-topical/')
+def custom_from_topical(request, tid: int, data: CopyIn):
+    topical = _topical(request, tid)
+    with transaction.atomic():
+        custom = build_custom_from_topical(topical, data.title)
+    return _custom_d(custom, full=True)
 
 
 @topical_router.post('/{tid}/custom/{cid}/copy/')

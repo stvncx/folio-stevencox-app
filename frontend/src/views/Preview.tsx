@@ -69,7 +69,7 @@ function Entry({ type, data }: { type: string; data: any }) {
   }
 }
 
-function ResumeView({ sections }: { sections: any[] }) {
+export function ResumeView({ sections }: { sections: any[] }) {
   const active = sections.filter((s) => s.is_active !== false)
   const contact = active.find((s) => s.section_type === 'contact')?.entries?.[0]
   const headline = active.find((s) => s.section_type === 'headline')?.entries?.[0]
@@ -107,6 +107,23 @@ export function TopicalPreview() {
       </div>
       <div className="py-6 px-4">
         <ResumeView sections={t.sections || []} />
+      </div>
+    </div>
+  )
+}
+
+export function CustomPreview() {
+  const { id, cid } = useParams()
+  const { data: c, isLoading } = useQuery({ queryKey: ['customDetail', Number(cid)], queryFn: () => apiGet(`/topical/${id}/custom/${cid}/`) })
+  if (isLoading) return <div className="p-8"><Spinner label="Loading…" /></div>
+  return (
+    <div className="bg-slate-100 min-h-full">
+      <div className="no-print flex items-center justify-between max-w-3xl mx-auto px-4 pt-4">
+        <Link to={`/topical/${id}/custom/${cid}`} className="text-sm text-slate-500">← Back to editor</Link>
+        <Button variant="outline" onClick={() => window.print()}>Print / Save PDF</Button>
+      </div>
+      <div className="py-6 px-4">
+        <ResumeView sections={c.sections || []} />
       </div>
     </div>
   )

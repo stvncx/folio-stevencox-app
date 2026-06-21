@@ -135,6 +135,22 @@ def build_custom_from_ai(topical, meta, ai_json) -> CustomResume:
     return custom
 
 
+def build_custom_from_topical(topical, title: str) -> CustomResume:
+    """Create a custom resume by copying the topical resume's active content
+    (resolving each entry's per-resume selection), as a manual starting point."""
+    custom = CustomResume.objects.create(
+        topical_resume=topical, title=title or 'Untitled', job_posting='',
+        company_name='', position_title='',
+        generation_method=CustomResume.GenerationMethod.COPIED)
+    for s in topical.sections.filter(is_active=True).prefetch_related('entries'):
+        ns = CustomResumeSection.objects.create(
+            custom_resume=custom, section_type=s.section_type, title=s.title, order=s.order)
+        for e in s.entries.all():
+            CustomResumeEntry.objects.create(
+                section=ns, topical_entry=e, order=e.order, data=_resolve_entry_data(e.data))
+    return custom
+
+
 def deep_copy_custom(source: CustomResume, title: str) -> CustomResume:
     """Independent deep copy (business rule 18)."""
     copy = CustomResume.objects.create(

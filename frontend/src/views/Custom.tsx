@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../lib/api'
 import { useGenerate } from '../lib/generate'
-import { entryTitle } from '../lib/sections'
+import { SECTION_LABEL, SECTION_TYPES, entryTitle } from '../lib/sections'
 import { EntryForm } from '../components/EntryForm'
 import { Sortable } from '../components/Sortable'
 import { Button, Card, Spinner, confirmAction, input, useToast } from '../components/ui'
@@ -57,7 +57,9 @@ export function CustomNew() {
     catch { /* shown */ }
   }
   const copy = useMutation({
-    mutationFn: () => apiPost(`/topical/${tid}/custom/${Number(copyId)}/copy/`, { title: copyTitle || 'Copy' }),
+    mutationFn: () => copyId === 'topical'
+      ? apiPost(`/topical/${tid}/custom/from-topical/`, { title: copyTitle || 'Copy of topical' })
+      : apiPost(`/topical/${tid}/custom/${Number(copyId)}/copy/`, { title: copyTitle || 'Copy' }),
     onSuccess: (c: any) => nav(`/topical/${tid}/custom/${c.id}`),
   })
 
@@ -82,13 +84,15 @@ export function CustomNew() {
         )}
       </Card>
       <Card className="p-5">
-        <h3 className="font-semibold mb-2">Copy an existing one</h3>
+        <h3 className="font-semibold mb-2">Copy from a source (no AI)</h3>
+        <p className="text-sm text-slate-500 mb-2">Start from your curated topical resume, or duplicate an existing custom resume — then edit it manually.</p>
         <select className={input + ' mb-2'} value={copyId} onChange={(e) => setCopyId(e.target.value)}>
-          <option value="">Select a custom resume…</option>
-          {existing?.map((c: any) => <option key={c.id} value={c.id}>{c.title}</option>)}
+          <option value="">Select a source…</option>
+          <option value="topical">This topical resume (curated content)</option>
+          {existing?.map((c: any) => <option key={c.id} value={c.id}>Copy of: {c.title}</option>)}
         </select>
         <input className={input + ' mb-2'} placeholder="New title" value={copyTitle} onChange={(e) => setCopyTitle(e.target.value)} />
-        <Button variant="outline" disabled={!copyId || copy.isPending} onClick={() => copy.mutate()}>Copy</Button>
+        <Button variant="outline" disabled={!copyId || copy.isPending} onClick={() => copy.mutate()}>Create</Button>
       </Card>
     </div>
   )
@@ -100,50 +104,87 @@ export function CustomEditor() {
   const { data: c, isLoading } = useQuery({ queryKey: ['customDetail', cidN], queryFn: () => apiGet(`/topical/${tid}/custom/${cidN}/`) })
   const [modal, setModal] = useState<null | { sid: number; sectionType: string; entry: any }>(null)
   const refresh = () => qc.invalidateQueries({ queryKey: ['customDetail', cidN] })
-  const saveEntry = useMutation({
-    mutationFn: (p: { sid: number; eid: number; data: any }) => apiPatch(`/custom/${cidN}/sections/${p.sid}/entries/${p.eid}/`, { data: p.data, order: 0 }),
-    onSuccess: () => { refresh(); setModal(null); toast('Saved') },
+
+  const addSection = useMutation({
+    mutationFn: (st: string) => apiPost(`/custom/${cidN}/sections/`, { section_type: st, title: SECTION_LABEL[st] || st, order: 999 }),
+    onSuccess: () => { refresh(); toast('Section added') },
   })
-  const delEntry = useMutation({ mutationFn: (p: { sid: number; eid: number }) => apiDelete(`/custom/${cidN}/sections/${p.sid}/entries/${p.eid}/`), onSuccess: refresh })
+  const delSection = useMutation({ mutationFn: (sid: number) => apiDelete(`/custom/${cidN}/sections/${sid}/`), onSuccess: () => { refresh(); toast('Section removed') } })
+  const saveEntry = useMutation({
+    mutationFn: (p: { sid: number; entry?: any; data: any }) =>
+      p.entry
+        ? apiPatch(`/custom/${cidN}/sections/${p.sid}/entries/${p.entry.id}/`, { data: p.data, order: p.entry.order })
+        : apiPost(`/custom/${cidN}/sections/${p.sid}/entries/`, { data: p.data, order: 999 }),
+    onSuccess: () => { refresh(); setModal(null); toast('Saved') },
+    onError: (e: any) => toast(e.message, 'error'),
+  })
+  const delEntry = useMutation({ mutationFn: (p: { sid: number; eid: number }) => apiDelete(`/custom/${cidN}/sections/${p.sid}/entries/${p.eid}/`), onSuccess: () => { refresh(); toast('Deleted') } })
+  const saveTitle = useMutation({ mutationFn: (title: string) => apiPatch(`/topical/${tid}/custom/${cidN}/`, { title }), onSuccess: refresh })
 
   if (isLoading) return <div className="p-8"><Spinner label="Loading…" /></div>
   const sById: Record<number, any> = Object.fromEntries(c.sections.map((s: any) => [s.id, s]))
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
+    <div className="p-4">
       <div className="flex items-center justify-between mb-3 no-print">
-        <h1 className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>{c.title}</h1>
+        <input className="text-xl font-bold bg-transparent border-b border-transparent hover:border-slate-300 focus:border-slate-400 focus:outline-none px-1"
+          style={{ color: 'var(--color-primary)' }} defaultValue={c.title}
+          onBlur={(e) => { if (e.target.value.trim() && e.target.value !== c.title) saveTitle.mutate(e.target.value.trim()) }} />
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => window.print()}>Export / Print</Button>
+          <Link to={`/topical/${tid}/custom/${cidN}/preview`}><Button variant="outline">Preview</Button></Link>
           <Link to={`/topical/${tid}/custom`}><Button variant="ghost">Back</Button></Link>
         </div>
       </div>
-      <Sortable ids={c.sections.map((s: any) => s.id)} onReorder={(ids) => apiPost(`/custom/${cidN}/sections/reorder/`, { ordered_ids: ids }).then(refresh)}>
-        {(sid) => {
-          const s = sById[sid]
-          return (
-            <Card className="p-4 mb-1">
-              <h2 className="font-semibold mb-2" style={{ color: 'var(--color-primary)' }}>{s.title}</h2>
-              {s.entries.map((e: any) => (
-                <div key={e.id} className="flex items-center justify-between border border-slate-100 rounded px-3 py-2 text-sm">
-                  <span className="truncate" dangerouslySetInnerHTML={{ __html: '' }} />
-                  <span className="truncate flex-1">{entryTitle(s.section_type, e.data)}</span>
-                  <div className="flex gap-1 shrink-0 no-print">
-                    <Button variant="ghost" onClick={() => setModal({ sid: s.id, sectionType: s.section_type, entry: e })}>Edit</Button>
-                    <Button variant="ghost" onClick={() => delEntry.mutate({ sid: s.id, eid: e.id })}>×</Button>
+      <div className="flex gap-4">
+        <Card className="w-52 shrink-0 p-3 h-fit no-print">
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Add section</div>
+          {SECTION_TYPES.map((s) => (
+            <button key={s.value} disabled={addSection.isPending} onClick={() => addSection.mutate(s.value)}
+              className="block w-full text-left text-sm px-2 py-1.5 rounded hover:bg-slate-100">{s.label}</button>
+          ))}
+        </Card>
+        <div className="flex-1 min-w-0">
+          {c.sections.length === 0 && <p className="text-slate-500 text-sm">This resume is empty. Add a section from the left.</p>}
+          <Sortable ids={c.sections.map((s: any) => s.id)} onReorder={(ids) => apiPost(`/custom/${cidN}/sections/reorder/`, { ordered_ids: ids }).then(refresh)}>
+            {(sid) => {
+              const s = sById[sid]
+              return (
+                <Card className="p-4 mb-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="font-semibold" style={{ color: 'var(--color-primary)' }}>{s.title}</h2>
+                    <div className="flex gap-1 no-print">
+                      <Button variant="outline" onClick={() => setModal({ sid: s.id, sectionType: s.section_type, entry: null })}>+ Entry</Button>
+                      <Button variant="ghost" onClick={() => { if (confirmAction('Delete this section and its entries?')) delSection.mutate(s.id) }}>Delete</Button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </Card>
-          )
-        }}
-      </Sortable>
+                  {s.entries.length === 0
+                    ? <p className="text-slate-400 text-sm">No entries.</p>
+                    : <Sortable ids={s.entries.map((e: any) => e.id)} onReorder={(ids) => apiPost(`/custom/${cidN}/sections/${s.id}/entries/reorder/`, { ordered_ids: ids }).then(refresh)}>
+                      {(eid) => {
+                        const e = s.entries.find((x: any) => x.id === eid)
+                        return (
+                          <div className="flex items-center justify-between border border-slate-100 rounded px-3 py-2 text-sm">
+                            <span className="truncate">{entryTitle(s.section_type, e.data)}</span>
+                            <div className="flex gap-1 shrink-0 no-print">
+                              <Button variant="ghost" onClick={() => setModal({ sid: s.id, sectionType: s.section_type, entry: e })}>Edit</Button>
+                              <Button variant="ghost" onClick={() => delEntry.mutate({ sid: s.id, eid: e.id })}>×</Button>
+                            </div>
+                          </div>
+                        )
+                      }}
+                    </Sortable>}
+                </Card>
+              )
+            }}
+          </Sortable>
+        </div>
+      </div>
       {modal && (
         <div className="fixed inset-0 bg-black/50 grid place-items-center p-4 z-40 no-print" onClick={() => setModal(null)}>
           <Card className="w-full max-w-2xl max-h-[88vh] overflow-auto p-5"><div onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-bold mb-3">Edit entry</h3>
-            <EntryForm sectionType={modal.sectionType} initial={modal.entry.data} saving={saveEntry.isPending}
-              onCancel={() => setModal(null)} onSave={(data) => saveEntry.mutate({ sid: modal.sid, eid: modal.entry.id, data })} />
+            <h3 className="font-bold mb-3">{modal.entry ? 'Edit' : 'New'} {SECTION_LABEL[modal.sectionType] || modal.sectionType} entry</h3>
+            <EntryForm sectionType={modal.sectionType} initial={modal.entry?.data} saving={saveEntry.isPending}
+              onCancel={() => setModal(null)} onSave={(data) => saveEntry.mutate({ sid: modal.sid, entry: modal.entry, data })} />
           </div></Card>
         </div>
       )}
