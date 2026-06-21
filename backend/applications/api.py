@@ -4,6 +4,7 @@ import re
 from datetime import date, datetime
 from typing import Optional
 
+from asgiref.sync import sync_to_async
 from django.db.models import Count
 from ninja import File, Router, Schema
 from ninja.errors import HttpError
@@ -12,7 +13,9 @@ from ninja.files import UploadedFile
 from applications.models import (ApplicationActivity, ApplicationContact,
                                  JobApplication)
 from resumes.models import CustomResume
+from services import ai
 from services.models import AIJob
+from users.models import build_profile_text
 
 router = Router(tags=['applications'])
 
@@ -45,6 +48,7 @@ def _activity_d(a):
 
 def _app_d(a, full=False):
     d = {'id': a.id, 'company_name': a.company_name, 'position_title': a.position_title,
+         'company_url': a.company_url, 'company_analysis': a.company_analysis,
          'status': a.status, 'job_posting': a.job_posting, 'job_posting_url': a.job_posting_url,
          'custom_resume_id': a.custom_resume_id,
          'applied_date': a.applied_date.isoformat() if a.applied_date else None,
@@ -62,6 +66,7 @@ def _app_d(a, full=False):
 class AppIn(Schema):
     company_name: str
     position_title: str
+    company_url: str = ''
     job_posting: str = ''
     job_posting_url: str = ''
     status: str = 'saved'
@@ -75,6 +80,8 @@ class AppIn(Schema):
 class AppPatch(Schema):
     company_name: Optional[str] = None
     position_title: Optional[str] = None
+    company_url: Optional[str] = None
+    company_analysis: Optional[str] = None
     job_posting: Optional[str] = None
     job_posting_url: Optional[str] = None
     status: Optional[str] = None
@@ -121,7 +128,8 @@ def create_app(request, data: AppIn):
     c = _own_custom(request, data.custom_resume_id)
     a = JobApplication.objects.create(
         user=request.user, company_name=data.company_name, position_title=data.position_title,
-        job_posting=data.job_posting, job_posting_url=data.job_posting_url, status=data.status,
+        company_url=data.company_url, job_posting=data.job_posting,
+        job_posting_url=data.job_posting_url, status=data.status,
         applied_date=data.applied_date, follow_up_date=data.follow_up_date,
         offer_deadline=data.offer_deadline, notes=data.notes, custom_resume=c)
     return _app_d(a, full=True)
@@ -148,6 +156,28 @@ def update_app(request, aid: int, data: AppPatch):
 def delete_app(request, aid: int):
     _app(request, aid).delete()
     return 204, None
+
+
+# --- company analysis ------------------------------------------------------
+@router.post('/{aid}/analyze-company/')
+async def analyze_company_ep(request, aid: int):
+    def _ctx():
+        a = _app(request, aid)
+        return a.company_name, a.company_url, build_profile_text(request.user)
+    company, url, profile_text = await sync_to_async(_ctx)()
+    try:
+        analysis = await ai.analyze_company(company, url, profile_text)
+    except ai.AIConfigError as e:
+        raise HttpError(400, str(e))
+    except Exception as e:  # noqa: BLE001
+        raise HttpError(502, f'Analysis failed: {e}')
+
+    def _save():
+        a = _app(request, aid)
+        a.company_analysis = analysis
+        a.save(update_fields=['company_analysis', 'updated_at'])
+        return _app_d(a, full=True)
+    return await sync_to_async(_save)()
 
 
 # --- cover letter ----------------------------------------------------------

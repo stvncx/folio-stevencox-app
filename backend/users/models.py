@@ -13,11 +13,35 @@ class UserProfile(models.Model):
     accent_color = models.CharField(max_length=7, default='#0066cc')
     font_name = models.CharField(max_length=100, blank=True)
     font_file = models.FileField(upload_to='fonts/', null=True, blank=True)
+    # Personal profile used to assess job/company fit.
+    about = models.TextField(blank=True)
+    preferences = models.TextField(blank=True)
+    fulfilling = models.TextField(blank=True)
+    personality = models.JSONField(default=list, blank=True)  # [{question, answer}]
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'Profile<{self.user.username}>'
+
+
+def build_profile_text(user) -> str:
+    """Compose the user's profile into prose for AI fit assessment."""
+    p = UserProfile.objects.filter(user=user).first()
+    if not p:
+        return ''
+    parts = []
+    if p.about:
+        parts.append('About me: ' + p.about)
+    if p.preferences:
+        parts.append('Job preferences: ' + p.preferences)
+    if p.fulfilling:
+        parts.append('What I find fulfilling: ' + p.fulfilling)
+    qa = '\n'.join(f"Q: {x.get('question')}\nA: {x.get('answer')}"
+                   for x in (p.personality or []) if x.get('answer'))
+    if qa:
+        parts.append('Personality Q&A:\n' + qa)
+    return '\n\n'.join(parts)
 
 
 class AuthToken(models.Model):

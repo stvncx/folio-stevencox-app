@@ -64,6 +64,30 @@ SYSTEMS = {
         "Return the cover letter as clean HTML suitable for a TipTap editor — use <p> tags for "
         "paragraphs. No other formatting unless appropriate."
     ),
+    'company_analysis': (
+        "You are a career advisor researching a company as a potential employer for a specific "
+        "candidate. Use web search to find current, factual information about the company.\n\n"
+        "Then write an assessment as clean HTML (use <h3>, <p>, <ul><li>; never markdown fences). "
+        "Cover, in this order:\n"
+        "- Overview: what the company does, industry, size, locations, products/services\n"
+        "- Reputation & culture: themes from employee reviews and news\n"
+        "- Recent news or notable developments\n"
+        "- Pros and cons as an employer\n"
+        "- Fit for the candidate: assess how well this company matches the candidate's stated "
+        "preferences, the work they find fulfilling, and their personality answers. End this "
+        "section with an explicit rating on its own line — <strong>Fit: Strong</strong>, "
+        "<strong>Fit: Moderate</strong>, or <strong>Fit: Weak</strong> — followed by a one-sentence "
+        "rationale.\n\n"
+        "Be honest about unknowns and never fabricate facts. If web search yields little, say so "
+        "and base the assessment on general knowledge."
+    ),
+    'personality_questions': (
+        "Generate up to 10 concise, thoughtful questions whose answers would help determine "
+        "whether a given job or company is a good personality and values fit for this person. "
+        "Span work style, ideal environment, motivation, values, collaboration vs autonomy, "
+        "pace/risk tolerance, and growth. Tailor to anything already known about the person.\n\n"
+        "Return ONLY a JSON array of question strings — no preamble, no markdown, no object keys."
+    ),
 }
 
 
@@ -87,3 +111,55 @@ async def stream(kind: str, user_text: str):
     ) as s:
         async for text in s.text_stream:
             yield text
+
+
+def _text_of(resp) -> str:
+    return ''.join(b.text for b in resp.content if getattr(b, 'type', None) == 'text').strip()
+
+
+async def analyze_company(company: str, url: str, profile_text: str) -> str:
+    """Research a company (web search) and assess fit. Returns HTML."""
+    client = _client()
+    user_text = (
+        f"Company: {company}\n"
+        f"Company website: {url or '(none provided)'}\n\n"
+        f"Candidate profile (use this to assess fit):\n{profile_text or '(no profile provided yet)'}"
+    )
+    messages = [{'role': 'user', 'content': user_text}]
+    last = None
+    # Try with web search; if the tool is unavailable, fall back to no tools.
+    for tools in ([{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 6}], None):
+        try:
+            kwargs = dict(model=settings.ANTHROPIC_MODEL, max_tokens=settings.ANTHROPIC_MAX_TOKENS,
+                          system=SYSTEMS['company_analysis'], messages=messages)
+            if tools:
+                kwargs['tools'] = tools
+            text = _text_of(await client.messages.create(**kwargs))
+            if text:
+                if not tools:
+                    text = '<p><em>(Web search was unavailable; based on general knowledge.)</em></p>' + text
+                return text
+        except Exception as e:  # noqa: BLE001
+            logger.warning('analyze_company attempt failed (web_search=%s): %s', bool(tools), e)
+            last = e
+    raise last or RuntimeError('Analysis produced no text.')
+
+
+async def generate_personality_questions(profile_text: str) -> list:
+    """Generate up to 10 personality/fit questions. Returns a list of strings."""
+    import json
+    client = _client()
+    resp = await client.messages.create(
+        model=settings.ANTHROPIC_MODEL, max_tokens=1024,
+        system=SYSTEMS['personality_questions'],
+        messages=[{'role': 'user',
+                   'content': f"About the person:\n{profile_text or '(little known yet)'}\n\nGenerate the questions now."}],
+    )
+    text = _text_of(resp)
+    text = text.removeprefix('```json').removeprefix('```').removesuffix('```').strip()
+    try:
+        qs = json.loads(text)
+        return [str(q).strip() for q in qs if str(q).strip()][:10]
+    except Exception:  # noqa: BLE001
+        lines = [ln.strip(' -•\t0123456789.').strip() for ln in text.splitlines()]
+        return [ln for ln in lines if len(ln) > 8][:10]

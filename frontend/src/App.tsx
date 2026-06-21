@@ -13,6 +13,7 @@ import { CustomEditor, CustomList, CustomNew } from './views/Custom'
 import { ApplicationDetail, ApplicationNew, ApplicationsList } from './views/Applications'
 import { ThemeSettings } from './views/Theme'
 import { Dashboard } from './views/Dashboard'
+import { Profile } from './views/Profile'
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } })
 
@@ -44,6 +45,7 @@ export default function App() {
                   <Route path="/applications" element={<ApplicationsList />} />
                   <Route path="/applications/new" element={<ApplicationNew />} />
                   <Route path="/applications/:id" element={<ApplicationDetail />} />
+                  <Route path="/profile" element={<Profile />} />
                   <Route path="/settings/theme" element={<ThemeSettings />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/cv" replace />} />

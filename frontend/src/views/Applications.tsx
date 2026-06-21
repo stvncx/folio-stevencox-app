@@ -107,8 +107,12 @@ export function ApplicationDetail() {
   return (
     <div className="p-6 max-w-3xl">
       <Link to="/applications" className="text-xs text-slate-400">← Applications</Link>
-      <h1 className="text-xl font-bold mt-1 mb-1" style={{ color: 'var(--color-primary)' }}>{a.position_title}</h1>
-      <p className="text-slate-500 mb-4">{a.company_name}</p>
+      <input key={`pos-${a.position_title}`} className="text-xl font-bold mt-1 w-full bg-transparent rounded px-1 -ml-1 border border-transparent hover:border-slate-200 focus:border-slate-400 focus:bg-white focus:outline-none"
+        style={{ color: 'var(--color-primary)' }} defaultValue={a.position_title} title="Click to edit position"
+        onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== a.position_title) patch.mutate({ position_title: v }) }} />
+      <input key={`co-${a.company_name}`} className="text-slate-500 mb-4 w-full bg-transparent rounded px-1 -ml-1 border border-transparent hover:border-slate-200 focus:border-slate-400 focus:bg-white focus:outline-none"
+        defaultValue={a.company_name} title="Click to edit company"
+        onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== a.company_name) patch.mutate({ company_name: v }) }} />
       <div className="flex gap-1 mb-4 border-b border-slate-200">
         {(['overview', 'cover', 'contacts', 'activity'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`px-3 py-2 text-sm border-b-2 ${tab === t ? 'border-current font-medium' : 'border-transparent text-slate-500'}`} style={tab === t ? { color: 'var(--color-accent)' } : undefined}>
@@ -145,12 +149,44 @@ export function ApplicationDetail() {
             <span className="block mb-1 text-slate-600">Position description</span>
             <OverviewJobPosting a={a} patch={patch} />
           </div>
+          <CompanyAnalysis a={a} patch={patch} />
         </Card>
       )}
 
       {tab === 'cover' && <CoverLetterTab app={a} refresh={refresh} />}
       {tab === 'contacts' && <ContactsTab aid={aid} contacts={a.contacts} refresh={refresh} />}
       {tab === 'activity' && <ActivityTab aid={aid} activities={a.activities} refresh={refresh} />}
+    </div>
+  )
+}
+
+function CompanyAnalysis({ a, patch }: { a: any; patch: any }) {
+  const qc = useQueryClient(); const toast = useToast()
+  const [url, setUrl] = useState(a.company_url || '')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const analyze = async () => {
+    setBusy(true); setErr('')
+    try {
+      const fresh = await apiPost(`/applications/${a.id}/analyze-company/`)
+      qc.setQueryData(['app', a.id], fresh)
+      toast('Analysis ready')
+    } catch (e: any) { setErr(e.message) } finally { setBusy(false) }
+  }
+  return (
+    <div className="mt-4 text-sm">
+      <span className="block mb-1 text-slate-600">Company link & AI analysis</span>
+      <div className="flex gap-2 mb-2">
+        <input className={input} placeholder="https://company.com" value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          onBlur={() => { if (url !== a.company_url) patch.mutate({ company_url: url }) }} />
+        <Button variant="outline" onClick={analyze} disabled={busy}>{busy ? 'Analyzing…' : 'AI analysis'}</Button>
+      </div>
+      {err && <div className="text-red-600 text-xs mb-1">{err}</div>}
+      {busy && <div className="text-xs text-slate-400 mb-1">Researching the company across the web and assessing fit — this can take ~30s.</div>}
+      {a.company_analysis
+        ? <div className="tiptap border border-slate-200 rounded p-3 bg-white max-h-[28rem] overflow-auto" dangerouslySetInnerHTML={{ __html: a.company_analysis }} />
+        : <p className="text-xs text-slate-400">No analysis yet. Add a company link (optional) and click “AI analysis” for an employer overview, web-mined details, and a fit assessment based on your profile.</p>}
     </div>
   )
 }

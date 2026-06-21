@@ -15,6 +15,7 @@ export function Layout() {
         <NavLink to="/cv" className={link}>CV</NavLink>
         <NavLink to="/topical" className={link}>Resumes</NavLink>
         <NavLink to="/applications" className={link}>Applications</NavLink>
+        <NavLink to="/profile" className={link}>Profile</NavLink>
         <NavLink to="/settings/theme" className={link}>Theme</NavLink>
         {user?.is_staff && (
           <a href="/admin/" className="px-3 py-1.5 rounded text-sm font-medium text-slate-600 hover:bg-slate-50">Admin</a>

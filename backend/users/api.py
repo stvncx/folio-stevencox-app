@@ -1,3 +1,6 @@
+from typing import List, Optional
+
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -5,7 +8,8 @@ from ninja import File, Router, Schema
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
-from users.models import AuthToken, UserProfile
+from services import ai
+from users.models import AuthToken, UserProfile, build_profile_text
 
 auth_router = Router(tags=['auth'])
 profile_router = Router(tags=['profile'])
@@ -47,6 +51,10 @@ def _profile_dict(request, profile):
         'accent_color': profile.accent_color,
         'font_name': profile.font_name,
         'font_url': url,
+        'about': profile.about,
+        'preferences': profile.preferences,
+        'fulfilling': profile.fulfilling,
+        'personality': profile.personality or [],
         'username': request.user.username,
         'email': request.user.email,
         'is_staff': request.user.is_staff,
@@ -56,6 +64,10 @@ def _profile_dict(request, profile):
 class ProfileIn(Schema):
     primary_color: str = None
     accent_color: str = None
+    about: Optional[str] = None
+    preferences: Optional[str] = None
+    fulfilling: Optional[str] = None
+    personality: Optional[List[dict]] = None
 
 
 @profile_router.get('/')
@@ -71,8 +83,28 @@ def update_profile(request, data: ProfileIn):
         profile.primary_color = data.primary_color[:7]
     if data.accent_color is not None:
         profile.accent_color = data.accent_color[:7]
+    if data.about is not None:
+        profile.about = data.about
+    if data.preferences is not None:
+        profile.preferences = data.preferences
+    if data.fulfilling is not None:
+        profile.fulfilling = data.fulfilling
+    if data.personality is not None:
+        profile.personality = data.personality
     profile.save()
     return _profile_dict(request, profile)
+
+
+@profile_router.post('/personality-questions/')
+async def personality_questions(request):
+    profile_text = await sync_to_async(lambda: build_profile_text(request.user))()
+    try:
+        qs = await ai.generate_personality_questions(profile_text)
+    except ai.AIConfigError as e:
+        raise HttpError(400, str(e))
+    except Exception as e:  # noqa: BLE001
+        raise HttpError(502, f'Could not generate questions: {e}')
+    return {'questions': qs}
 
 
 @profile_router.post('/font/')

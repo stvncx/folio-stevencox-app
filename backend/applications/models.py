@@ -20,6 +20,8 @@ class JobApplication(models.Model):
         CustomResume, on_delete=models.SET_NULL, null=True, blank=True, related_name='applications')
     company_name = models.CharField(max_length=200)
     position_title = models.CharField(max_length=200)
+    company_url = models.URLField(blank=True)
+    company_analysis = models.TextField(blank=True)  # AI research/fit (HTML)
     job_posting = models.TextField(blank=True)
     job_posting_url = models.URLField(blank=True)
     status = models.CharField(max_length=20, choices=ApplicationStatus.choices,
