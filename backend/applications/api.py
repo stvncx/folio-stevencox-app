@@ -295,6 +295,14 @@ class UrlIn(Schema):
     url: str
 
 
+LOGIN_WALL = ('Some job sites (LinkedIn, Indeed, Glassdoor…) require signing in and block '
+              'automated fetching. Paste the description text or upload the PDF instead.')
+_WALL_URL = ('authwall', '/login', '/uas/login', '/checkpoint', 'signin', '/authwall')
+_WALL_TEXT = ('sign in to linkedin', 'join linkedin', 'sign in to view', 'please log in',
+              'you must be logged in', 'sign in or join', 'log in or sign up',
+              'sign in to continue', 'register to see')
+
+
 @jd_router.post('/fetch/')
 def fetch_url(request, data: UrlIn):
     """Best-effort fetch of a position-description URL → readable text."""
@@ -302,17 +310,32 @@ def fetch_url(request, data: UrlIn):
     url = data.url.strip()
     if not url.startswith(('http://', 'https://')):
         raise HttpError(400, 'Enter a valid http(s) URL.')
+    host = url.split('://', 1)[1].split('/', 1)[0].lower()
+    wall_domain = any(d in host for d in
+                      ('linkedin.com', 'indeed.com', 'glassdoor.com', 'ziprecruiter.com', 'dice.com'))
     try:
-        r = httpx.get(url, follow_redirects=True, timeout=15.0,
-                      headers={'User-Agent': 'Mozilla/5.0 (compatible; FolioBot/1.0)'})
+        r = httpx.get(url, follow_redirects=True, timeout=15.0, headers={
+            'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                           '(KHTML, like Gecko) Chrome/124.0 Safari/537.36'),
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9'})
+        # Redirected to a sign-in wall (LinkedIn does this for logged-out requests).
+        if any(m in str(r.url).lower() for m in _WALL_URL):
+            raise HttpError(502, LOGIN_WALL)
         r.raise_for_status()
         raw = r.text
+    except HttpError:
+        raise
     except Exception:
-        raise HttpError(502, 'Could not fetch that URL — paste the description instead.')
+        # Known job sites bot-block (HTTP 999/403); say so plainly.
+        raise HttpError(502, LOGIN_WALL if wall_domain
+                        else 'Could not fetch that URL — paste the description instead.')
     raw = re.sub(r'(?is)<(script|style|noscript)[^>]*>.*?</\1>', ' ', raw)
     text = _html.unescape(re.sub(r'(?s)<[^>]+>', ' ', raw))
     text = '\n'.join(ln.strip() for ln in re.sub(r'[ \t]+', ' ', text).splitlines())
     text = re.sub(r'\n{3,}', '\n\n', text).strip()
+    if any(p in text[:2000].lower() for p in _WALL_TEXT):
+        raise HttpError(502, LOGIN_WALL)
     if len(text) < 50:
         raise HttpError(502, 'Fetched the page but found little text — paste the description instead.')
     return {'text': text[:20000], 'url': url}

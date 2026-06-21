@@ -46,7 +46,8 @@ export function JobPostingInput({ value, onChange, url, onUrlChange, onCommit, r
           <input type="file" accept=".pdf" className="hidden" onChange={onFile} />
         </label>
       </div>
-      {err && <div className="text-red-600 text-xs mb-1">{err}</div>}
+      <p className="text-xs text-slate-400 mb-2">LinkedIn, Indeed &amp; Glassdoor require sign-in and block auto-fetch — for those, upload the PDF or paste the text.</p>
+      {err && <div className="text-red-600 text-sm mb-1">{err}</div>}
       <textarea className={input} rows={rows} placeholder="…or paste the position description text here"
         value={value} onChange={(e) => onChange(e.target.value)} onBlur={() => onCommit?.(value, u)} />
     </div>
