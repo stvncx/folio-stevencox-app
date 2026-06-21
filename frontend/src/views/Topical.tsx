@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../lib/api'
 import { useGenerate } from '../lib/generate'
-import { entryTitle } from '../lib/sections'
+import { dateRange, entryTitle } from '../lib/sections'
 import { EntryForm } from '../components/EntryForm'
 import { Sortable } from '../components/Sortable'
 import { Button, Card, Spinner, confirmAction, input, useToast } from '../components/ui'
@@ -33,6 +33,7 @@ function ExperienceSelection({ entry, save }: { entry: any; save: (data: any) =>
   return (
     <div className="text-sm">
       <div className="font-medium">{data.job_title} <span className="text-slate-400">· {data.company}</span></div>
+      {dateRange(data) && <div className="text-xs text-slate-400">{dateRange(data)}</div>}
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 mt-2 mb-1">Description (choose one)</div>
       {descriptions.length === 0 && <p className="text-xs text-slate-400">No descriptions — add alternatives in the CV.</p>}
       {descriptions.map((html, i) => (

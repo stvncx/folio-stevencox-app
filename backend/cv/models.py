@@ -3,7 +3,8 @@ from django.db import models
 
 
 class SectionType(models.TextChoices):
-    """Fixed LinkedIn-standard section list (16). The only valid section types."""
+    """LinkedIn-standard section list + a Contact header. Valid section types."""
+    CONTACT = 'contact', 'Contact'
     HEADLINE = 'headline', 'Headline'
     ABOUT = 'about', 'About'
     EXPERIENCE = 'experience', 'Experience'
@@ -24,6 +25,7 @@ class SectionType(models.TextChoices):
 
 # Required fields per section type — enforced when creating/updating CV entries.
 REQUIRED_FIELDS = {
+    'contact': ['full_name'],
     'headline': ['text'],
     'about': ['text'],
     'experience': ['job_title', 'company', 'start_date', 'is_current'],

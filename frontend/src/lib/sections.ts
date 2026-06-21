@@ -4,11 +4,12 @@
 export interface FieldDef {
   key: string
   label: string
-  type: 'text' | 'textarea' | 'rich' | 'month' | 'checkbox' | 'bullets' | 'richlist'
+  type: 'text' | 'textarea' | 'rich' | 'monthyear' | 'checkbox' | 'bullets' | 'richlist'
   required?: boolean
 }
 
 export const SECTION_TYPES: { value: string; label: string }[] = [
+  { value: 'contact', label: 'Contact' },
   { value: 'headline', label: 'Headline' },
   { value: 'about', label: 'About' },
   { value: 'experience', label: 'Experience' },
@@ -31,15 +32,23 @@ export const SECTION_LABEL: Record<string, string> =
   Object.fromEntries(SECTION_TYPES.map((s) => [s.value, s.label]))
 
 export const FIELDS: Record<string, FieldDef[]> = {
+  contact: [
+    { key: 'full_name', label: 'Full name', type: 'text', required: true },
+    { key: 'location', label: 'Location (e.g. City, State)', type: 'text' },
+    { key: 'email', label: 'Email', type: 'text' },
+    { key: 'phone', label: 'Phone', type: 'text' },
+    { key: 'website', label: 'Website / portfolio', type: 'text' },
+    { key: 'linkedin', label: 'LinkedIn URL', type: 'text' },
+  ],
   headline: [{ key: 'text', label: 'Headline', type: 'text', required: true }],
   about: [{ key: 'text', label: 'About', type: 'rich', required: true }],
   experience: [
     { key: 'job_title', label: 'Job title', type: 'text', required: true },
     { key: 'company', label: 'Company', type: 'text', required: true },
     { key: 'location', label: 'Location', type: 'text' },
-    { key: 'start_date', label: 'Start (YYYY-MM)', type: 'month', required: true },
+    { key: 'start_date', label: 'Start (MM-YYYY)', type: 'monthyear', required: true },
     { key: 'is_current', label: 'I currently work here', type: 'checkbox', required: true },
-    { key: 'end_date', label: 'End (YYYY-MM)', type: 'month' },
+    { key: 'end_date', label: 'End (MM-YYYY)', type: 'monthyear' },
     { key: 'descriptions', label: 'Descriptions (add alternatives — pick one per resume)', type: 'richlist' },
     { key: 'bullets', label: 'Accomplishments (selectable per resume)', type: 'bullets' },
   ],
@@ -47,8 +56,8 @@ export const FIELDS: Record<string, FieldDef[]> = {
     { key: 'school', label: 'School', type: 'text', required: true },
     { key: 'degree', label: 'Degree', type: 'text', required: true },
     { key: 'field_of_study', label: 'Field of study', type: 'text' },
-    { key: 'start_date', label: 'Start (YYYY-MM)', type: 'month' },
-    { key: 'end_date', label: 'End (YYYY-MM)', type: 'month' },
+    { key: 'start_date', label: 'Start (MM-YYYY)', type: 'monthyear' },
+    { key: 'end_date', label: 'End (MM-YYYY)', type: 'monthyear' },
     { key: 'grade', label: 'Grade', type: 'text' },
     { key: 'activities', label: 'Activities', type: 'text' },
     { key: 'description', label: 'Description', type: 'rich' },
@@ -61,9 +70,9 @@ export const FIELDS: Record<string, FieldDef[]> = {
   certifications: [
     { key: 'name', label: 'Name', type: 'text', required: true },
     { key: 'issuing_organization', label: 'Issuing organization', type: 'text', required: true },
-    { key: 'issue_date', label: 'Issue date (YYYY-MM)', type: 'month' },
+    { key: 'issue_date', label: 'Issue date (MM-YYYY)', type: 'monthyear' },
     { key: 'does_not_expire', label: 'Does not expire', type: 'checkbox', required: true },
-    { key: 'expiration_date', label: 'Expiration (YYYY-MM)', type: 'month' },
+    { key: 'expiration_date', label: 'Expiration (MM-YYYY)', type: 'monthyear' },
     { key: 'credential_id', label: 'Credential ID', type: 'text' },
     { key: 'credential_url', label: 'Credential URL', type: 'text' },
   ],
@@ -71,15 +80,15 @@ export const FIELDS: Record<string, FieldDef[]> = {
     { key: 'name', label: 'Name', type: 'text', required: true },
     { key: 'description', label: 'Description', type: 'rich' },
     { key: 'url', label: 'URL', type: 'text' },
-    { key: 'start_date', label: 'Start (YYYY-MM)', type: 'month' },
+    { key: 'start_date', label: 'Start (MM-YYYY)', type: 'monthyear' },
     { key: 'is_current', label: 'Ongoing', type: 'checkbox', required: true },
-    { key: 'end_date', label: 'End (YYYY-MM)', type: 'month' },
+    { key: 'end_date', label: 'End (MM-YYYY)', type: 'monthyear' },
     { key: 'associated_with', label: 'Associated with', type: 'text' },
   ],
   publications: [
     { key: 'title', label: 'Title', type: 'text', required: true },
     { key: 'publisher', label: 'Publisher', type: 'text' },
-    { key: 'publication_date', label: 'Date (YYYY-MM)', type: 'month' },
+    { key: 'publication_date', label: 'Date (MM-YYYY)', type: 'monthyear' },
     { key: 'url', label: 'URL', type: 'text' },
     { key: 'authors', label: 'Authors', type: 'text' },
     { key: 'description', label: 'Description', type: 'rich' },
@@ -89,7 +98,7 @@ export const FIELDS: Record<string, FieldDef[]> = {
     { key: 'patent_office', label: 'Patent office', type: 'text' },
     { key: 'status', label: 'Status', type: 'text' },
     { key: 'patent_number', label: 'Patent number', type: 'text' },
-    { key: 'issue_date', label: 'Issue date (YYYY-MM)', type: 'month' },
+    { key: 'issue_date', label: 'Issue date (MM-YYYY)', type: 'monthyear' },
     { key: 'url', label: 'URL', type: 'text' },
     { key: 'inventors', label: 'Inventors', type: 'text' },
     { key: 'description', label: 'Description', type: 'rich' },
@@ -102,16 +111,16 @@ export const FIELDS: Record<string, FieldDef[]> = {
   honors: [
     { key: 'title', label: 'Title', type: 'text', required: true },
     { key: 'issuer', label: 'Issuer', type: 'text' },
-    { key: 'issue_date', label: 'Date (YYYY-MM)', type: 'month' },
+    { key: 'issue_date', label: 'Date (MM-YYYY)', type: 'monthyear' },
     { key: 'description', label: 'Description', type: 'rich' },
   ],
   volunteer: [
     { key: 'role', label: 'Role', type: 'text', required: true },
     { key: 'organization', label: 'Organization', type: 'text', required: true },
     { key: 'cause', label: 'Cause', type: 'text' },
-    { key: 'start_date', label: 'Start (YYYY-MM)', type: 'month' },
+    { key: 'start_date', label: 'Start (MM-YYYY)', type: 'monthyear' },
     { key: 'is_current', label: 'Currently volunteering', type: 'checkbox', required: true },
-    { key: 'end_date', label: 'End (YYYY-MM)', type: 'month' },
+    { key: 'end_date', label: 'End (MM-YYYY)', type: 'monthyear' },
     { key: 'description', label: 'Description', type: 'rich' },
   ],
   languages: [
@@ -121,9 +130,9 @@ export const FIELDS: Record<string, FieldDef[]> = {
   organizations: [
     { key: 'name', label: 'Name', type: 'text', required: true },
     { key: 'position', label: 'Position', type: 'text' },
-    { key: 'start_date', label: 'Start (YYYY-MM)', type: 'month' },
+    { key: 'start_date', label: 'Start (MM-YYYY)', type: 'monthyear' },
     { key: 'is_current', label: 'Current', type: 'checkbox', required: true },
-    { key: 'end_date', label: 'End (YYYY-MM)', type: 'month' },
+    { key: 'end_date', label: 'End (MM-YYYY)', type: 'monthyear' },
     { key: 'description', label: 'Description', type: 'rich' },
   ],
   featured: [
@@ -136,23 +145,41 @@ export const FIELDS: Record<string, FieldDef[]> = {
     { key: 'recommender_name', label: 'Recommender', type: 'text', required: true },
     { key: 'recommender_title', label: 'Their title', type: 'text' },
     { key: 'relationship', label: 'Relationship', type: 'text' },
-    { key: 'date', label: 'Date (YYYY-MM)', type: 'month' },
+    { key: 'date', label: 'Date (MM-YYYY)', type: 'monthyear' },
     { key: 'text', label: 'Recommendation', type: 'rich', required: true },
   ],
+}
+
+// Normalise a date string to MM-YYYY (accepts legacy YYYY-MM and MM/YYYY).
+export function toMonthYear(s?: unknown): string {
+  if (!s || typeof s !== 'string') return ''
+  let m = s.match(/^(\d{4})-(\d{1,2})$/)            // YYYY-MM (legacy)
+  if (m) return `${m[2].padStart(2, '0')}-${m[1]}`
+  m = s.match(/^(\d{1,2})[/-](\d{4})$/)             // MM-YYYY or MM/YYYY
+  if (m) return `${m[1].padStart(2, '0')}-${m[2]}`
+  return s
+}
+
+export function dateRange(data: Record<string, any>): string {
+  const start = toMonthYear(data?.start_date)
+  const end = data?.is_current ? 'Present' : toMonthYear(data?.end_date)
+  return [start, end].filter(Boolean).join(' – ')
 }
 
 // A short human label for an entry, for list rows.
 export function entryTitle(sectionType: string, data: Record<string, unknown>): string {
   const d = data || {}
   const pick = (k: string) => (d[k] as string) || ''
+  const withDates = (base: string) => { const dr = dateRange(d); return dr ? `${base}  (${dr})` : base }
   switch (sectionType) {
+    case 'contact': return pick('full_name') || pick('email') || '(contact)'
     case 'headline': case 'about': return (pick('text') || '').replace(/<[^>]+>/g, '').slice(0, 80) || '(empty)'
-    case 'experience': return [pick('job_title'), pick('company')].filter(Boolean).join(' · ') || '(role)'
-    case 'education': return [pick('degree'), pick('school')].filter(Boolean).join(' · ') || '(degree)'
+    case 'experience': return withDates([pick('job_title'), pick('company')].filter(Boolean).join(' · ') || '(role)')
+    case 'education': return withDates([pick('degree'), pick('school')].filter(Boolean).join(' · ') || '(degree)')
     case 'skills': return pick('name') || '(skill)'
     case 'languages': return pick('language') || '(language)'
     case 'recommendations': return pick('recommender_name') || '(recommender)'
-    case 'volunteer': return [pick('role'), pick('organization')].filter(Boolean).join(' · ') || '(role)'
+    case 'volunteer': return withDates([pick('role'), pick('organization')].filter(Boolean).join(' · ') || '(role)')
     default: return pick('name') || pick('title') || '(entry)'
   }
 }

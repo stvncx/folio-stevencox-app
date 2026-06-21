@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FIELDS } from '../lib/sections'
+import { FIELDS, toMonthYear } from '../lib/sections'
 import { RichEditor } from './Editor'
 import { Button, Field, input } from './ui'
 
@@ -16,6 +16,8 @@ export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
     // Checkboxes only land in state when toggled; seed them to false so an
     // untouched box is still sent (an unchecked box is a valid `false`).
     for (const f of fields) if (f.type === 'checkbox' && init[f.key] === undefined) init[f.key] = false
+    // Show dates as MM-YYYY (convert any legacy YYYY-MM values).
+    for (const f of fields) if (f.type === 'monthyear' && init[f.key]) init[f.key] = toMonthYear(init[f.key])
     // Migrate a legacy single `description` into the `descriptions` pool.
     if (init.description && init.descriptions === undefined && fields.some((f) => f.key === 'descriptions')) {
       init.descriptions = [init.description]
@@ -96,7 +98,8 @@ export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
         )
         return (
           <Field key={f.key} label={f.label + (f.required ? ' *' : '')}>
-            <input className={input} type={f.type === 'month' ? 'month' : 'text'}
+            <input className={input} type="text"
+              placeholder={f.type === 'monthyear' ? 'MM-YYYY' : undefined}
               value={v || ''} onChange={(e) => set(f.key, e.target.value)} />
           </Field>
         )
