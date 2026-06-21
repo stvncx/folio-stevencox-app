@@ -42,9 +42,11 @@ export function EntryForm({ sectionType, initial, onSave, onCancel, saving }: {
           </label>
         )
         if (f.type === 'rich') return (
-          <Field key={f.key} label={f.label + (f.required ? ' *' : '')}>
+          // NOT a <label> — wrapping a contentEditable in a label steals focus.
+          <div key={f.key} className="mb-3">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">{f.label}{f.required ? ' *' : ''}</span>
             <RichEditor value={v || ''} onChange={(html) => set(f.key, html)} />
-          </Field>
+          </div>
         )
         if (f.type === 'textarea') return (
           <Field key={f.key} label={f.label}>
