@@ -27,6 +27,7 @@ class JobApplication(models.Model):
     status = models.CharField(max_length=20, choices=ApplicationStatus.choices,
                               default=ApplicationStatus.SAVED)
     applied_date = models.DateField(null=True, blank=True)
+    interview_date = models.DateField(null=True, blank=True)
     follow_up_date = models.DateField(null=True, blank=True)
     offer_deadline = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True)

@@ -26,6 +26,21 @@ export function Dashboard() {
         ))}
       </div>
 
+      {d.api_usage && (
+        <Card className="p-4 mb-6">
+          <div className="text-xs text-slate-500 uppercase tracking-wide mb-1">Your API usage (estimated)</div>
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <span className="text-2xl font-bold" style={{ color: 'var(--color-accent)' }}>${d.api_usage.cost_usd.toFixed(2)}</span>
+            <span className="text-sm text-slate-500">
+              {d.api_usage.calls} call{d.api_usage.calls === 1 ? '' : 's'} ·{' '}
+              {(d.api_usage.input_tokens + d.api_usage.output_tokens).toLocaleString()} tokens ·{' '}
+              {d.api_usage.web_searches} web search{d.api_usage.web_searches === 1 ? '' : 'es'}
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">Running total across all AI features (resumes, cover letters, company analyses, profile questions). Approximate.</p>
+        </Card>
+      )}
+
       {d.by_fit && Object.keys(d.by_fit).length > 0 && (
         <Card className="p-4 mb-6">
           <div className="text-xs text-slate-500 uppercase tracking-wide mb-2">Company fit (from AI analyses)</div>

@@ -140,6 +140,9 @@ export function ApplicationDetail() {
             <label className="text-sm">Applied date
               <input type="date" className={input} defaultValue={a.applied_date || ''} onBlur={(e) => patch.mutate({ applied_date: e.target.value || null })} />
             </label>
+            <label className="text-sm">Interview date
+              <input type="date" className={input} defaultValue={a.interview_date || ''} onBlur={(e) => patch.mutate({ interview_date: e.target.value || null })} />
+            </label>
             <label className="text-sm">Linked custom resume
               <select className={input} value={a.custom_resume_id || ''} onChange={(e) => patch.mutate({ custom_resume_id: e.target.value ? Number(e.target.value) : null })}>
                 <option value="">— none —</option>
@@ -199,8 +202,10 @@ function CompanyAnalysis({ a, patch }: { a: any; patch: any }) {
         <select className={input + ' max-w-[12rem]'} value={depth} onChange={(e) => setDepth(e.target.value)} title="Research depth (approx. cost)">
           {ANALYSIS_DEPTHS.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
         </select>
-        <Button variant="outline" onClick={analyze} disabled={busy}>{busy ? 'Analyzing…' : 'AI analysis'}</Button>
+        <Button variant="outline" onClick={analyze} disabled={busy || !a.interview_date}
+          title={!a.interview_date ? 'Add an interview date to unlock the analysis' : undefined}>{busy ? 'Analyzing…' : 'AI analysis'}</Button>
       </div>
+      {!a.interview_date && <p className="text-xs text-amber-600 mb-2">Add an <strong>interview date</strong> above to unlock the AI analysis.</p>}
       {err && <div className="text-red-600 text-xs mb-1">{err}</div>}
       {busy && <div className="text-xs text-slate-400 mb-1">Researching the company across the web and assessing fit — this can take ~30s.</div>}
       {a.company_analysis

@@ -99,7 +99,19 @@ def _client():
     return anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
 
-async def stream(kind: str, user_text: str):
+async def _record(user, kind, usage_obj):
+    """Best-effort: log this call's token/search usage for the user."""
+    if user is None:
+        return
+    try:
+        from asgiref.sync import sync_to_async
+        from services import usage as usage_mod
+        await sync_to_async(usage_mod.record_usage)(user, kind, settings.ANTHROPIC_MODEL, usage_obj)
+    except Exception:  # noqa: BLE001
+        logger.warning('usage record failed', exc_info=True)
+
+
+async def stream(kind: str, user_text: str, user=None):
     """Async-yield text chunks from the model for the given generation kind."""
     client = _client()
     system = SYSTEMS[kind]
@@ -111,13 +123,18 @@ async def stream(kind: str, user_text: str):
     ) as s:
         async for text in s.text_stream:
             yield text
+        try:
+            final = await s.get_final_message()
+            await _record(user, kind, final.usage)
+        except Exception:  # noqa: BLE001
+            logger.warning('stream usage record failed', exc_info=True)
 
 
 def _text_of(resp) -> str:
     return ''.join(b.text for b in resp.content if getattr(b, 'type', None) == 'text').strip()
 
 
-async def analyze_company(company: str, url: str, profile_text: str, max_searches: int = 3) -> str:
+async def analyze_company(company: str, url: str, profile_text: str, max_searches: int = 3, user=None) -> str:
     """Research a company (web search) and assess fit. Returns HTML.
 
     max_searches caps how many web searches the model may run — the main cost
@@ -139,8 +156,10 @@ async def analyze_company(company: str, url: str, profile_text: str, max_searche
                           system=SYSTEMS['company_analysis'], messages=messages)
             if tools:
                 kwargs['tools'] = tools
-            text = _text_of(await client.messages.create(**kwargs))
+            resp = await client.messages.create(**kwargs)
+            text = _text_of(resp)
             if text:
+                await _record(user, 'company_analysis', resp.usage)
                 if not tools:
                     text = '<p><em>(Web search was unavailable; based on general knowledge.)</em></p>' + text
                 return text
@@ -150,7 +169,7 @@ async def analyze_company(company: str, url: str, profile_text: str, max_searche
     raise last or RuntimeError('Analysis produced no text.')
 
 
-async def generate_personality_questions(profile_text: str) -> list:
+async def generate_personality_questions(profile_text: str, user=None) -> list:
     """Generate up to 10 personality/fit questions. Returns a list of strings."""
     import json
     client = _client()
@@ -160,6 +179,7 @@ async def generate_personality_questions(profile_text: str) -> list:
         messages=[{'role': 'user',
                    'content': f"About the person:\n{profile_text or '(little known yet)'}\n\nGenerate the questions now."}],
     )
+    await _record(user, 'personality_questions', resp.usage)
     text = _text_of(resp)
     text = text.removeprefix('```json').removeprefix('```').removesuffix('```').strip()
     try:

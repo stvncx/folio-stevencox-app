@@ -60,6 +60,7 @@ def _app_d(a, full=False):
          'status': a.status, 'job_posting': a.job_posting, 'job_posting_url': a.job_posting_url,
          'custom_resume_id': a.custom_resume_id,
          'applied_date': a.applied_date.isoformat() if a.applied_date else None,
+         'interview_date': a.interview_date.isoformat() if a.interview_date else None,
          'follow_up_date': a.follow_up_date.isoformat() if a.follow_up_date else None,
          'offer_deadline': a.offer_deadline.isoformat() if a.offer_deadline else None,
          'notes': a.notes, 'cover_letter': a.cover_letter,
@@ -80,6 +81,7 @@ class AppIn(Schema):
     job_posting_url: str = ''
     status: str = 'saved'
     applied_date: Optional[date] = None
+    interview_date: Optional[date] = None
     follow_up_date: Optional[date] = None
     offer_deadline: Optional[date] = None
     notes: str = ''
@@ -95,6 +97,7 @@ class AppPatch(Schema):
     job_posting_url: Optional[str] = None
     status: Optional[str] = None
     applied_date: Optional[date] = None
+    interview_date: Optional[date] = None
     follow_up_date: Optional[date] = None
     offer_deadline: Optional[date] = None
     notes: Optional[str] = None
@@ -139,8 +142,9 @@ def create_app(request, data: AppIn):
         user=request.user, company_name=data.company_name, position_title=data.position_title,
         company_url=data.company_url, job_posting=data.job_posting,
         job_posting_url=data.job_posting_url, status=data.status,
-        applied_date=data.applied_date, follow_up_date=data.follow_up_date,
-        offer_deadline=data.offer_deadline, notes=data.notes, custom_resume=c)
+        applied_date=data.applied_date, interview_date=data.interview_date,
+        follow_up_date=data.follow_up_date, offer_deadline=data.offer_deadline,
+        notes=data.notes, custom_resume=c)
     return _app_d(a, full=True)
 
 
@@ -179,7 +183,8 @@ async def analyze_company_ep(request, aid: int, data: AnalyzeIn):
         return a.company_name, a.company_url, build_profile_text(request.user)
     company, url, profile_text = await sync_to_async(_ctx)()
     try:
-        analysis = await ai.analyze_company(company, url, profile_text, max_searches=data.max_searches)
+        analysis = await ai.analyze_company(company, url, profile_text,
+                                            max_searches=data.max_searches, user=request.user)
     except ai.AIConfigError as e:
         raise HttpError(400, str(e))
     except Exception as e:  # noqa: BLE001
@@ -370,5 +375,13 @@ def dashboard(request):
         f = _fit_of(a.company_analysis)
         if f:
             by_fit[f] = by_fit.get(f, 0) + 1
+    from django.db.models import Sum
+    from services.models import ApiUsage
+    uq = ApiUsage.objects.filter(user=request.user)
+    agg = uq.aggregate(cost=Sum('cost_usd'), inp=Sum('input_tokens'),
+                       out=Sum('output_tokens'), web=Sum('web_searches'))
+    api_usage = {'cost_usd': round(agg['cost'] or 0.0, 4), 'calls': uq.count(),
+                 'input_tokens': agg['inp'] or 0, 'output_tokens': agg['out'] or 0,
+                 'web_searches': agg['web'] or 0}
     return {'total': apps.count(), 'by_status': by_status, 'by_fit': by_fit,
-            'upcoming': upcoming[:10], 'recent_activity': recent}
+            'api_usage': api_usage, 'upcoming': upcoming[:10], 'recent_activity': recent}

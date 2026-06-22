@@ -99,7 +99,7 @@ def update_profile(request, data: ProfileIn):
 async def personality_questions(request):
     profile_text = await sync_to_async(lambda: build_profile_text(request.user))()
     try:
-        qs = await ai.generate_personality_questions(profile_text)
+        qs = await ai.generate_personality_questions(profile_text, user=request.user)
     except ai.AIConfigError as e:
         raise HttpError(400, str(e))
     except Exception as e:  # noqa: BLE001

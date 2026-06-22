@@ -90,7 +90,7 @@ class BaseGen(AsyncJsonWebsocketConsumer):
         await _set_status(job, AIJob.Status.RUNNING)
         user_text = await self.prepare(job, user)
         full = ''
-        async for chunk in ai.stream(self.kind, user_text):
+        async for chunk in ai.stream(self.kind, user_text, user):
             full += chunk
             await self.send_json({'type': 'token', 'content': chunk})
         record_id = await self.finalize(job, user, full)

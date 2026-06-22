@@ -11,6 +11,7 @@ const HELP: HelpEntry[] = [
     items: [
       ['Total applications', 'The number of job applications you are tracking.'],
       ['Status cards', 'How many applications sit in each stage — Saved, Applied, Phone Screen, Interview, Offer, Rejected, Withdrawn.'],
+      ['Your API usage', 'A running estimate of what you have spent on AI features (resumes, cover letters, company analyses, profile questions) — total cost, calls, tokens, and web searches.'],
       ['Company fit', 'A breakdown of AI fit ratings (Strong / Moderate / Weak) across the companies you have run an analysis on.'],
       ['Upcoming dates', 'Follow-up dates and offer deadlines, soonest first. Click a row to open that application.'],
       ['Recent activity', 'The latest activity logged across all your applications. Click a row to open the application.'],
@@ -118,10 +119,10 @@ const HELP: HelpEntry[] = [
     items: [
       ['Position / Company (top)', 'Click either to edit it inline; saves when you click away.'],
       ['Tabs', 'Overview, Cover Letter, Contacts, and Activity for this application.'],
-      ['Status / Applied / Follow-up', 'Track the stage and key dates (follow-up dates appear on the Dashboard).'],
+      ['Status / Applied / Interview / Follow-up', 'Track the stage and key dates (interview and follow-up dates feed the Dashboard).'],
       ['Linked custom resume', 'Attach the tailored resume you sent; required for AI cover-letter generation.'],
       ['Position description', 'The job posting — upload a PDF or paste the entire text.'],
-      ['Company link & AI analysis', 'Add the company URL, pick a research depth (Quick/Standard/Deep, roughly $0.05–$0.15 — more searches = more thorough), then “AI analysis” researches the company on the web and assesses fit (based on your Profile). The result shows below.'],
+      ['Company link & AI analysis', 'Add the company URL, pick a research depth (Quick/Standard/Deep, roughly $0.05–$0.15 — more searches = more thorough), then “AI analysis” researches the company on the web and assesses fit (based on your Profile). Unlocked once an interview date is set, to avoid spending on companies before you have an interview.'],
       ['Cover Letter tab', 'Write or AI-generate a cover letter for this role.'],
       ['Contacts tab', 'Recruiters, hiring managers and others tied to this application.'],
       ['Activity tab', 'Log calls, emails, interviews and notes — these feed the Dashboard’s recent activity.'],

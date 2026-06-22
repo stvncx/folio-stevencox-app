@@ -26,3 +26,21 @@ class AIJob(models.Model):
 
     def __str__(self):
         return f'AIJob<{self.kind}#{self.pk} {self.status}>'
+
+
+class ApiUsage(models.Model):
+    """One row per Anthropic API call, for per-user running cost totals."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_usage')
+    kind = models.CharField(max_length=30)
+    model = models.CharField(max_length=60)
+    input_tokens = models.IntegerField(default=0)
+    output_tokens = models.IntegerField(default=0)
+    web_searches = models.IntegerField(default=0)
+    cost_usd = models.FloatField(default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'ApiUsage<{self.user_id} {self.kind} ${self.cost_usd:.4f}>'
