@@ -168,15 +168,23 @@ export function ApplicationDetail() {
   )
 }
 
+const ANALYSIS_DEPTHS = [
+  { key: 'quick', label: 'Quick · ~$0.05', searches: 2 },
+  { key: 'standard', label: 'Standard · ~$0.10', searches: 5 },
+  { key: 'deep', label: 'Deep · ~$0.15', searches: 8 },
+]
+
 function CompanyAnalysis({ a, patch }: { a: any; patch: any }) {
   const qc = useQueryClient(); const toast = useToast()
   const [url, setUrl] = useState(a.company_url || '')
+  const [depth, setDepth] = useState('quick')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
   const analyze = async () => {
     setBusy(true); setErr('')
     try {
-      const fresh = await apiPost(`/applications/${a.id}/analyze-company/`)
+      const searches = ANALYSIS_DEPTHS.find((d) => d.key === depth)?.searches ?? 2
+      const fresh = await apiPost(`/applications/${a.id}/analyze-company/`, { max_searches: searches })
       qc.setQueryData(['app', a.id], fresh)
       toast('Analysis ready')
     } catch (e: any) { setErr(e.message) } finally { setBusy(false) }
@@ -188,6 +196,9 @@ function CompanyAnalysis({ a, patch }: { a: any; patch: any }) {
         <input className={input} placeholder="https://company.com" value={url}
           onChange={(e) => setUrl(e.target.value)}
           onBlur={() => { if (url !== a.company_url) patch.mutate({ company_url: url }) }} />
+        <select className={input + ' max-w-[12rem]'} value={depth} onChange={(e) => setDepth(e.target.value)} title="Research depth (approx. cost)">
+          {ANALYSIS_DEPTHS.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
+        </select>
         <Button variant="outline" onClick={analyze} disabled={busy}>{busy ? 'Analyzing…' : 'AI analysis'}</Button>
       </div>
       {err && <div className="text-red-600 text-xs mb-1">{err}</div>}

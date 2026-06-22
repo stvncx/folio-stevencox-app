@@ -168,14 +168,18 @@ def delete_app(request, aid: int):
 
 
 # --- company analysis ------------------------------------------------------
+class AnalyzeIn(Schema):
+    max_searches: int = 2
+
+
 @router.post('/{aid}/analyze-company/')
-async def analyze_company_ep(request, aid: int):
+async def analyze_company_ep(request, aid: int, data: AnalyzeIn):
     def _ctx():
         a = _app(request, aid)
         return a.company_name, a.company_url, build_profile_text(request.user)
     company, url, profile_text = await sync_to_async(_ctx)()
     try:
-        analysis = await ai.analyze_company(company, url, profile_text)
+        analysis = await ai.analyze_company(company, url, profile_text, max_searches=data.max_searches)
     except ai.AIConfigError as e:
         raise HttpError(400, str(e))
     except Exception as e:  # noqa: BLE001

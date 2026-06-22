@@ -120,7 +120,7 @@ const HELP: HelpEntry[] = [
       ['Status / Applied / Follow-up', 'Track the stage and key dates (follow-up dates appear on the Dashboard).'],
       ['Linked custom resume', 'Attach the tailored resume you sent; required for AI cover-letter generation.'],
       ['Position description', 'The job posting — paste a link, upload a PDF, or type it.'],
-      ['Company link & AI analysis', 'Add the company URL, then “AI analysis” researches the company on the web and assesses fit (based on your Profile). The result shows below.'],
+      ['Company link & AI analysis', 'Add the company URL, pick a research depth (Quick/Standard/Deep, roughly $0.05–$0.15 — more searches = more thorough), then “AI analysis” researches the company on the web and assesses fit (based on your Profile). The result shows below.'],
       ['Cover Letter tab', 'Write or AI-generate a cover letter for this role.'],
       ['Contacts tab', 'Recruiters, hiring managers and others tied to this application.'],
       ['Activity tab', 'Log calls, emails, interviews and notes — these feed the Dashboard’s recent activity.'],

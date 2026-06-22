@@ -117,9 +117,14 @@ def _text_of(resp) -> str:
     return ''.join(b.text for b in resp.content if getattr(b, 'type', None) == 'text').strip()
 
 
-async def analyze_company(company: str, url: str, profile_text: str) -> str:
-    """Research a company (web search) and assess fit. Returns HTML."""
+async def analyze_company(company: str, url: str, profile_text: str, max_searches: int = 3) -> str:
+    """Research a company (web search) and assess fit. Returns HTML.
+
+    max_searches caps how many web searches the model may run — the main cost
+    driver — so callers can offer cheaper/deeper tiers.
+    """
     client = _client()
+    n = max(1, min(int(max_searches), 12))
     user_text = (
         f"Company: {company}\n"
         f"Company website: {url or '(none provided)'}\n\n"
@@ -128,7 +133,7 @@ async def analyze_company(company: str, url: str, profile_text: str) -> str:
     messages = [{'role': 'user', 'content': user_text}]
     last = None
     # Try with web search; if the tool is unavailable, fall back to no tools.
-    for tools in ([{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': 6}], None):
+    for tools in ([{'type': 'web_search_20250305', 'name': 'web_search', 'max_uses': n}], None):
         try:
             kwargs = dict(model=settings.ANTHROPIC_MODEL, max_tokens=settings.ANTHROPIC_MAX_TOKENS,
                           system=SYSTEMS['company_analysis'], messages=messages)
