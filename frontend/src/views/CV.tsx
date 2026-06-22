@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiDelete, apiGet, apiPatch, apiPost } from '../lib/api'
 import { SECTION_LABEL, SECTION_TYPES, entryTitle } from '../lib/sections'
@@ -64,7 +65,10 @@ export function CV() {
 
       {/* main */}
       <div className="flex-1 min-w-0">
-        <h1 className="text-xl font-bold mb-3" style={{ color: 'var(--color-primary)' }}>Curriculum Vitae</h1>
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>Curriculum Vitae</h1>
+          <Link to="/profile"><Button variant="outline">My Profile →</Button></Link>
+        </div>
         {cv.sections.length === 0 && <p className="text-slate-500 text-sm">Add a section from the left to begin.</p>}
         <Sortable ids={cv.sections.map((s: any) => s.id)} onReorder={(ids) => apiPost('/cv/sections/reorder/', { ordered_ids: ids }).then(refresh)}>
           {(sid) => {

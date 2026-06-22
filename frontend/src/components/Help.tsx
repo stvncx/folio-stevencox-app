@@ -31,7 +31,7 @@ const HELP: HelpEntry[] = [
     intro: 'Create a job-specific version of a resume — either AI-tailored to a particular posting, or copied from your topical resume so you can edit it by hand.',
     items: [
       ['Generate with AI', 'Creates a resume tailored to a specific job posting using your topical resume as the source. Needs the position description.'],
-      ['Position description', 'Paste a link (Fetch pulls the text), upload a PDF (text is extracted), or paste the text directly.'],
+      ['Position description', 'Upload a PDF of the posting or paste the entire text. Used by the AI to tailor the resume.'],
       ['Copy from a source', 'Create a custom resume without AI: copy your curated topical resume, or duplicate an existing custom resume, then edit it by hand.'],
       ['New title', 'The name for the resume being created.'],
     ],
@@ -99,6 +99,7 @@ const HELP: HelpEntry[] = [
       ['+ Entry', 'Add an entry. Experience entries are a company with one or more positions, each with multiple alternative descriptions and selectable bullets.'],
       ['Edit / ×', 'Edit or delete an entry. Drag entries to reorder.'],
       ['Dates', 'Entered and shown as MM-YYYY.'],
+      ['My Profile →', 'Opens your personal profile (about you, job preferences, and personality questions) — used by the AI to judge how well a company fits you.'],
     ],
   },
   {
@@ -107,7 +108,7 @@ const HELP: HelpEntry[] = [
     items: [
       ['Company / Position', 'The employer and role you are applying for.'],
       ['Status', 'Where this application stands (Saved, Applied, Interview, …).'],
-      ['Position description', 'Paste a link (Fetch), upload a PDF, or paste the text. Saved with the application and used for AI tailoring.'],
+      ['Position description', 'Upload a PDF of the posting or paste the entire text. Saved with the application and used for AI tailoring.'],
       ['Create', 'Saves the application and opens its detail page.'],
     ],
   },
@@ -119,7 +120,7 @@ const HELP: HelpEntry[] = [
       ['Tabs', 'Overview, Cover Letter, Contacts, and Activity for this application.'],
       ['Status / Applied / Follow-up', 'Track the stage and key dates (follow-up dates appear on the Dashboard).'],
       ['Linked custom resume', 'Attach the tailored resume you sent; required for AI cover-letter generation.'],
-      ['Position description', 'The job posting — paste a link, upload a PDF, or type it.'],
+      ['Position description', 'The job posting — upload a PDF or paste the entire text.'],
       ['Company link & AI analysis', 'Add the company URL, pick a research depth (Quick/Standard/Deep, roughly $0.05–$0.15 — more searches = more thorough), then “AI analysis” researches the company on the web and assesses fit (based on your Profile). The result shows below.'],
       ['Cover Letter tab', 'Write or AI-generate a cover letter for this role.'],
       ['Contacts tab', 'Recruiters, hiring managers and others tied to this application.'],

@@ -93,7 +93,7 @@ export function ApplicationNew() {
           {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
         </select>
         <div className="mb-3 text-sm"><span className="block mb-1 text-slate-600">Position description (optional)</span>
-          <JobPostingInput value={f.job_posting} onChange={(t) => set('job_posting', t)} url={f.job_posting_url} onUrlChange={(u) => set('job_posting_url', u)} />
+          <JobPostingInput value={f.job_posting} onChange={(t) => set('job_posting', t)} />
         </div>
         <Button disabled={!f.company_name || !f.position_title || create.isPending} onClick={() => create.mutate()}>Create</Button>
       </Card>
@@ -212,10 +212,8 @@ function CompanyAnalysis({ a, patch }: { a: any; patch: any }) {
 
 function OverviewJobPosting({ a, patch }: { a: any; patch: any }) {
   const [text, setText] = useState(a.job_posting || '')
-  const [url, setUrl] = useState(a.job_posting_url || '')
   return (
-    <JobPostingInput value={text} onChange={setText} url={url} onUrlChange={setUrl}
-      onCommit={(t, u) => patch.mutate({ job_posting: t, job_posting_url: u })} />
+    <JobPostingInput value={text} onChange={setText} onCommit={(t) => patch.mutate({ job_posting: t })} />
   )
 }
 
