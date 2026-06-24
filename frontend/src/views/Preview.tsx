@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '../lib/api'
 import {
-  dateRange, normalizeExperience, positionLocation, selectedBullets, selectedDescription, toMonthYear,
+  dateRange, displayMonthYear, normalizeExperience, positionLocation, selectedBullets, selectedDescription,
 } from '../lib/sections'
 import { Button, Spinner } from '../components/ui'
 
@@ -65,7 +65,7 @@ function Entry({ type, data }: { type: string; data: any }) {
         {dateRange(data) && <span className="text-sm text-slate-500">{dateRange(data)}</span>}</div>
         {data.description && <div className="text-sm" dangerouslySetInnerHTML={{ __html: data.description }} />}</div>
     )
-    case 'certifications': return <div className="mb-1 text-sm"><span className="font-semibold">{data.name}</span> — {meta(data.issuing_organization, data.issue_date ? toMonthYear(data.issue_date) : '')}</div>
+    case 'certifications': return <div className="mb-1 text-sm"><span className="font-semibold">{data.name}</span> — {meta(data.issuing_organization, data.issue_date ? displayMonthYear(data.issue_date) : '')}</div>
     case 'projects': return <div className="mb-2"><span className="font-semibold">{data.name}</span>{data.description && <div className="text-sm" dangerouslySetInnerHTML={{ __html: data.description }} />}</div>
     case 'languages': return <span className="text-sm">{data.language}{data.proficiency ? ` (${data.proficiency})` : ''}</span>
     case 'volunteer': return <div className="mb-1 text-sm"><span className="font-semibold">{data.role}</span> — {meta(data.organization, dateRange(data))}</div>
@@ -81,7 +81,7 @@ export function ResumeView({ sections }: { sections: any[] }) {
   const body = active.filter((s) => !['contact', 'headline'].includes(s.section_type) && s.entries.length)
 
   return (
-    <div className="bg-white mx-auto p-10 shadow-sm" style={{ maxWidth: '820px' }}>
+    <div className="resume-sheet bg-white mx-auto p-10 shadow-sm" style={{ maxWidth: '820px' }}>
       {contact ? <ContactHeader data={contact.data} /> : null}
       {headline?.data?.text && <div className="text-center text-slate-600 mb-4" style={{ color: 'var(--color-accent)' }}>{headline.data.text}</div>}
       {body.map((s) => (
@@ -110,7 +110,7 @@ export function TopicalPreview() {
           <Button variant="outline" onClick={() => window.print()}>Print / Save PDF</Button>
         </div>
       </div>
-      <div className="py-6 px-4">
+      <div className="resume-wrap py-6 px-4">
         <ResumeView sections={t.sections || []} />
       </div>
     </div>
@@ -127,7 +127,7 @@ export function CustomPreview() {
         <Link to={`/topical/${id}/custom/${cid}`} className="text-sm text-slate-500">← Back to editor</Link>
         <Button variant="outline" onClick={() => window.print()}>Print / Save PDF</Button>
       </div>
-      <div className="py-6 px-4">
+      <div className="resume-wrap py-6 px-4">
         <ResumeView sections={c.sections || []} />
       </div>
     </div>

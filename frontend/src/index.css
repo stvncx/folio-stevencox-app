@@ -32,4 +32,12 @@ body {
 @media print {
   .no-print { display: none !important; }
   body { background: #fff; }
+  @page { margin: 1.3cm; }                 /* single page margin — no doubled-up top space */
+  .resume-wrap { padding: 0 !important; }
+  .resume-sheet {
+    box-shadow: none !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;                 /* page margin provides the edge; avoids a big top gap */
+  }
 }

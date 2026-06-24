@@ -160,9 +160,14 @@ export function toMonthYear(s?: unknown): string {
   return s
 }
 
+// Display form of a month-year: MM/YYYY (storage stays MM-YYYY).
+export function displayMonthYear(s?: unknown): string {
+  return toMonthYear(s).replace('-', '/')
+}
+
 export function dateRange(data: Record<string, any>): string {
-  const start = toMonthYear(data?.start_date)
-  const end = data?.is_current ? 'Present' : toMonthYear(data?.end_date)
+  const start = displayMonthYear(data?.start_date)
+  const end = data?.is_current ? 'Present' : displayMonthYear(data?.end_date)
   return [start, end].filter(Boolean).join(' – ')
 }
 
