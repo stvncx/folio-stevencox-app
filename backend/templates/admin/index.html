@@ -1,0 +1,15 @@
+{% extends "admin/index.html" %}
+{% load folio_backup %}
+
+{% block content %}
+<div class="module" style="padding:14px 16px; margin-bottom:20px;">
+  <h2 style="margin:0 0 10px;">Backup</h2>
+  <form method="post" action="{% url 'admin_run_backup' %}" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+    {% csrf_token %}
+    <button type="submit" class="button" style="padding:8px 16px;">Back up now</button>
+    <span>Last backup: <strong>{% folio_last_backup %}</strong> <span style="color:#888;">(UTC)</span></span>
+  </form>
+  <p style="color:#666; font-size:12px; margin:10px 0 0;">Encrypted snapshot to GitHub; also runs automatically every day.</p>
+</div>
+{{ block.super }}
+{% endblock %}

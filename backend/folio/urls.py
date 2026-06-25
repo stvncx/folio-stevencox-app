@@ -2,8 +2,10 @@ from django.contrib import admin
 from django.urls import path
 
 from folio.api import api
+from services.admin_backup import run_backup
 
 urlpatterns = [
+    path('admin/run-backup/', run_backup, name='admin_run_backup'),  # must precede admin.site.urls
     path('admin/', admin.site.urls),
     path('api/', api.urls),
 ]
