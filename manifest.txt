@@ -1,7 +1,7 @@
-snapshot:    20260630-101011
-created_utc: 2026-06-30T10:10:11Z
+snapshot:    20260701-101000
+created_utc: 2026-07-01T10:10:00Z
 host:        ov-51902e
 code_commit: 66ada437dee241507bdfd455d3b5798437bc8d2c
 db:          folio_db
-dump_bytes:  126698
+dump_bytes:  127138
 media_files: 0
