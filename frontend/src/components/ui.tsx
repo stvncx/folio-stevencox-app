@@ -9,7 +9,7 @@ export function Button({ variant = 'primary', className = '', ...p }:
     ghost: 'text-slate-600 hover:bg-slate-100',
     danger: 'bg-red-600 text-white hover:bg-red-700',
   }
-  const style = variant === 'primary' ? { background: 'var(--color-accent)' } : undefined
+  const style = variant === 'primary' ? { background: 'var(--c-accent)' } : undefined
   return <button className={`${base} ${styles[variant]} ${className}`} style={style} {...p} />
 }
 

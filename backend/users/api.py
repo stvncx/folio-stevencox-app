@@ -11,7 +11,7 @@ from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
 from services import ai
-from users.models import AuthToken, PasswordResetToken, UserProfile, build_profile_text
+from users.models import AuthToken, PasswordResetToken, SiteTheme, UserProfile, build_profile_text
 
 auth_router = Router(tags=['auth'])
 profile_router = Router(tags=['profile'])
@@ -115,6 +115,8 @@ def _profile_dict(request, profile):
         'accent_color': profile.accent_color,
         'font_name': profile.font_name,
         'font_url': url,
+        'mode': profile.mode if profile.mode in ('light', 'dark') else 'light',
+        'site_preset': SiteTheme.load().preset,
         'about': profile.about,
         'preferences': profile.preferences,
         'fulfilling': profile.fulfilling,
@@ -128,6 +130,7 @@ def _profile_dict(request, profile):
 class ProfileIn(Schema):
     primary_color: str = None
     accent_color: str = None
+    mode: Optional[str] = None
     about: Optional[str] = None
     preferences: Optional[str] = None
     fulfilling: Optional[str] = None
@@ -147,6 +150,8 @@ def update_profile(request, data: ProfileIn):
         profile.primary_color = data.primary_color[:7]
     if data.accent_color is not None:
         profile.accent_color = data.accent_color[:7]
+    if data.mode is not None:
+        profile.mode = data.mode if data.mode in ('light', 'dark') else 'light'
     if data.about is not None:
         profile.about = data.about
     if data.preferences is not None:

@@ -6,11 +6,35 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+class SiteTheme(models.Model):
+    """Singleton (pk=1): the site-wide chrome theme the owner sets for everyone."""
+    PRESETS = [('verdigris', 'Verdigris'), ('ember', 'Ember'), ('slate', 'Slate')]
+    preset = models.CharField(max_length=20, choices=PRESETS, default='verdigris')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Site theme'
+        verbose_name_plural = 'Site theme'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return f'Site theme: {self.preset}'
+
+
 class UserProfile(models.Model):
-    """Per-user theme settings (colors + uploaded font)."""
+    """Per-user theme settings (document colors + uploaded font) + chrome mode."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     primary_color = models.CharField(max_length=7, default='#000000')
     accent_color = models.CharField(max_length=7, default='#0066cc')
+    mode = models.CharField(max_length=10, default='light')  # chrome light|dark (per user)
     font_name = models.CharField(max_length=100, blank=True)
     font_file = models.FileField(upload_to='fonts/', null=True, blank=True)
     # Personal profile used to assess job/company fit.

@@ -1,7 +1,19 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from users.models import PasswordResetToken, UserProfile
+from users.models import PasswordResetToken, SiteTheme, UserProfile
+
+
+@admin.register(SiteTheme)
+class SiteThemeAdmin(admin.ModelAdmin):
+    """The site-wide chrome theme applied to everyone. Users pick light/dark themselves."""
+    list_display = ('preset', 'updated_at')
+
+    def has_add_permission(self, request):
+        return not SiteTheme.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(UserProfile)

@@ -1,15 +1,70 @@
 @import "tailwindcss";
 
+/* Fonts — self-hosted (django-theme-kit). */
+@font-face { font-family:"Bricolage Grotesque"; font-weight:200 800; font-display:swap; src:url("/fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2-variations"); }
+@font-face { font-family:"Public Sans"; font-weight:100 900; font-display:swap; src:url("/fonts/public-sans-latin-wght-normal.woff2") format("woff2-variations"); }
+@font-face { font-family:"Public Sans"; font-style:italic; font-weight:100 900; font-display:swap; src:url("/fonts/public-sans-latin-wght-italic.woff2") format("woff2-variations"); }
+@font-face { font-family:"JetBrains Mono"; font-weight:100 800; font-display:swap; src:url("/fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2-variations"); }
+
+/* ==========================================================================
+   Theme tokens. Chrome surfaces/ink/lines come from these (kit "Verdigris"
+   light + a dark set); the app's Tailwind slate utilities are remapped onto
+   them. --c-accent (chrome accent) is set from the site-wide preset by JS.
+   --color-primary / --color-accent stay PER-USER for resume/document branding.
+   ========================================================================== */
 :root {
-  --color-primary: #000000;
-  --color-accent: #0066cc;
+  --font-display:"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-body:"Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  --color-primary:#000000;   /* per-user document heading colour */
+  --color-accent:#0066cc;    /* per-user document link/accent colour */
+
+  --c-accent:#17604f;        /* chrome accent (from site preset; JS sets live value) */
+  --c-accent-soft: color-mix(in srgb, var(--c-accent) 15%, transparent);
+
+  --c-bg:#edf1ee; --c-bg-raised:#fbfcfb; --c-bg-sunken:#dfe6e1; --c-hover:#e4ebe6;
+  --c-ink:#131d19; --c-ink-soft:#47554e; --c-ink-faint:#7c8b83;
+  --c-line:#cbd5ce; --c-line-strong:#a9b8af;
+  --c-bad:#9a3325; --c-ok:#2e6b45; --c-warn:#8a6410;
+
+  --color-bg: var(--c-bg);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --c-bg:#0b1120; --c-bg-raised:#131a27; --c-bg-sunken:#0f1826; --c-hover:#1e293b;
+  --c-ink:#e2e8f0; --c-ink-soft:#c3ccd9; --c-ink-faint:#8b98aa;
+  --c-line:#2a3446; --c-line-strong:#3a465c;
+  --c-bad:#f87171; --c-ok:#6cc08a; --c-warn:#fbbf24;
 }
 
 html, body, #root { height: 100%; margin: 0; }
 body {
-  font-family: var(--font-family-custom, ui-sans-serif, system-ui, -apple-system, sans-serif);
-  color: #0f172a;
-  background: #f8fafc;
+  font-family: var(--font-family-custom, var(--font-body));
+  color: var(--c-ink);
+  background: var(--color-bg);
+}
+
+/* ---- Tailwind slate palette -> tokens (unlayered, wins over utilities) ---- */
+.bg-white { background-color: var(--c-bg-raised); }
+.bg-slate-50 { background-color: var(--c-bg-sunken); }
+.bg-slate-100, .hover\:bg-slate-50:hover, .hover\:bg-slate-100:hover { background-color: var(--c-hover); }
+.text-slate-900, .text-slate-800, .text-slate-700, .hover\:text-slate-700:hover { color: var(--c-ink); }
+.text-slate-600, .text-slate-500 { color: var(--c-ink-soft); }
+.text-slate-400, .text-slate-300 { color: var(--c-ink-faint); }
+.text-red-600 { color: var(--c-bad); }
+.border-slate-100, .border-slate-200 { border-color: var(--c-line); }
+.border-slate-300, .border-slate-400, .border-slate-500, .border-slate-800 { border-color: var(--c-line-strong); }
+.hover\:border-slate-200:hover, .hover\:border-slate-300:hover { border-color: var(--c-line-strong); }
+.focus\:border-slate-500:focus { border-color: var(--c-accent); }
+::placeholder { color: var(--c-ink-faint); opacity: 1; }
+
+/* The resume document is always a light "paper" sheet, regardless of chrome mode. */
+.resume-sheet {
+  --c-bg-raised:#ffffff; --c-bg-sunken:#f4f5f7; --c-hover:#eef1f4;
+  --c-ink:#111827; --c-ink-soft:#374151; --c-ink-faint:#6b7280;
+  --c-line:#e5e7eb; --c-line-strong:#cbd5e1;
+  color:#111827; background:#ffffff;
 }
 
 /* TipTap content */
@@ -18,7 +73,7 @@ body {
 .tiptap ul { list-style: disc; padding-left: 22px; margin: 0 0 8px; }
 .tiptap ol { list-style: decimal; padding-left: 22px; margin: 0 0 8px; }
 .tiptap table { border-collapse: collapse; margin: 8px 0; }
-.tiptap td, .tiptap th { border: 1px solid #cbd5e1; padding: 4px 8px; min-width: 40px; }
+.tiptap td, .tiptap th { border: 1px solid var(--c-line-strong); padding: 4px 8px; min-width: 40px; }
 .tiptap a { color: var(--color-accent); text-decoration: underline; }
 
 /* Single-line bullet editor */
@@ -32,12 +87,12 @@ body {
 @media print {
   .no-print { display: none !important; }
   body { background: #fff; }
-  @page { margin: 1.3cm; }                 /* single page margin — no doubled-up top space */
+  @page { margin: 1.3cm; }
   .resume-wrap { padding: 0 !important; }
   .resume-sheet {
     box-shadow: none !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;                 /* page margin provides the edge; avoids a big top gap */
+    padding: 0 !important;
   }
 }

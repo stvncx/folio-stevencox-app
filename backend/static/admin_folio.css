@@ -1,53 +1,49 @@
-/* Folio admin theme — recolours the stock Django admin to match the app
-   (accent #0066cc, system font, branded header). Loaded via the
-   templates/admin/base_site.html override. */
+/* Folio admin theme — recolours the stock Django admin to the django-theme-kit
+   palette. --folio-accent is injected per site preset by base_site.html
+   (Verdigris / Ember / Slate). Loaded via the base_site.html override. */
+
+@font-face {
+  font-family: "Public Sans"; font-weight: 100 900; font-display: swap;
+  src: url("fonts/public-sans-latin-wght-normal.woff2") format("woff2-variations");
+}
+
+:root {
+  --folio-accent: #17604f;       /* default; base_site.html overrides per site preset */
+  --folio-accent-dark: #124e40;
+}
 
 :root, html[data-theme="light"], html[data-theme="dark"] {
-  --primary: #0066cc;
-  --secondary: #0066cc;
-  --accent: #0066cc;
-  --header-bg: linear-gradient(135deg, #0066cc 0%, #004a91 100%);
+  --primary: var(--folio-accent);
+  --secondary: var(--folio-accent);
+  --accent: var(--folio-accent);
+  --header-bg: var(--folio-accent);
   --header-color: #ffffff;
   --header-branding-color: #ffffff;
-  --link-fg: #0066cc;
-  --link-hover-color: #0052a3;
-  --link-selected-fg: #0052a3;
-  --button-bg: #0066cc;
-  --button-hover-bg: #0052a3;
-  --default-button-bg: #0066cc;
-  --default-button-hover-bg: #0052a3;
-  --body-fg: #0f172a;
-  --body-quiet-color: #64748b;
-  --border-color: #e2e8f0;
-  --breadcrumbs-bg: #0052a3;
+  --link-fg: var(--folio-accent);
+  --link-hover-color: var(--folio-accent-dark);
+  --link-selected-fg: var(--folio-accent-dark);
+  --button-bg: var(--folio-accent);
+  --button-hover-bg: var(--folio-accent-dark);
+  --default-button-bg: var(--folio-accent);
+  --default-button-hover-bg: var(--folio-accent-dark);
+  --body-fg: #131d19;
+  --body-quiet-color: #47554e;
+  --border-color: #cbd5ce;
+  --breadcrumbs-bg: var(--folio-accent-dark);
   --breadcrumbs-fg: #ffffff;
-  --selected-row: #e8f1fb;
-  --font-family-primary: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --selected-row: color-mix(in srgb, var(--folio-accent) 14%, transparent);
+  --font-family-primary: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 body, td, th, input, select, textarea, .button, button {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important;
+  font-family: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important;
 }
 
-#header { background: linear-gradient(135deg, #0066cc 0%, #004a91 100%); color: #fff; }
+#header { background: var(--folio-accent); color: #fff; }
 #branding h1, #branding h1 a:link, #branding h1 a:visited { color: #fff; font-weight: 700; letter-spacing: -0.3px; }
 #user-tools { color: rgba(255,255,255,0.85); }
 #user-tools a { color: #fff; border-bottom-color: rgba(255,255,255,0.4); }
 
-.module caption, .module h2, .inline-group .tabular caption { background: #0066cc; color: #fff; }
-div.breadcrumbs { background: #0052a3; color: #fff; }
+.module caption, .module h2, .inline-group .tabular caption { background: var(--folio-accent); color: #fff; }
+div.breadcrumbs { background: var(--folio-accent-dark); color: #fff; }
 div.breadcrumbs a { color: rgba(255,255,255,0.9); }
-
-a:link, a:visited { color: #0066cc; }
-a:hover { color: #0052a3; }
-.button, input[type=submit], input[type=button], .submit-row input, button { background: #0066cc; border-radius: 6px; }
-.button:hover, input[type=submit]:hover, .submit-row input:hover { background: #0052a3; }
-.button.default, input[type=submit].default { background: #0066cc; }
-.button.default:hover, input[type=submit].default:hover { background: #0052a3; }
-.object-tools a:link, .object-tools a:visited { background: #0052a3; border-radius: 6px; }
-
-tr.selected, .row1.selected, .row2.selected { background: #e8f1fb; }
-#changelist table tbody tr:hover { background: #f1f5f9; }
-
-body.login #container { border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-body.login #header { border-radius: 12px 12px 0 0; }
