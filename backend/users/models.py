@@ -60,6 +60,27 @@ class AuthToken(models.Model):
         return f'Token<{self.user.username}>'
 
 
+class PasswordResetToken(models.Model):
+    """One-time password-reset token. Delivered by email if SMTP is configured;
+    the link is also visible in the Django admin so the owner can relay it."""
+    TTL_HOURS = 24
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reset_tokens')
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    created = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created']
+
+    @property
+    def expired(self):
+        from django.utils import timezone
+        return (timezone.now() - self.created).total_seconds() > self.TTL_HOURS * 3600
+
+    def __str__(self):
+        return f'Reset<{self.user.username}>'
+
+
 @receiver(post_save, sender=User)
 def ensure_profile(sender, instance, created, **kwargs):
     if created:

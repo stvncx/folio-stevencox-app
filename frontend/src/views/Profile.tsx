@@ -13,6 +13,17 @@ export function Profile() {
   const [fulfilling, setFulfilling] = useState('')
   const [personality, setPersonality] = useState<QA[]>([])
   const [gen, setGen] = useState(false)
+  const [curPw, setCurPw] = useState(''); const [newPw, setNewPw] = useState(''); const [newPw2, setNewPw2] = useState('')
+  const [pwBusy, setPwBusy] = useState(false)
+  const changePw = async () => {
+    if (newPw.length < 8) { toast('New password must be at least 8 characters.', 'error'); return }
+    if (newPw !== newPw2) { toast('New passwords do not match.', 'error'); return }
+    setPwBusy(true)
+    try {
+      await apiPost('/auth/change-password/', { current_password: curPw, new_password: newPw })
+      toast('Password changed'); setCurPw(''); setNewPw(''); setNewPw2('')
+    } catch (e: any) { toast(e.message || 'Could not change password', 'error') } finally { setPwBusy(false) }
+  }
 
   useEffect(() => {
     if (!p) return
@@ -71,6 +82,20 @@ export function Profile() {
       </Card>
 
       <Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? 'Saving…' : 'Save profile'}</Button>
+
+      <Card className="p-5 mt-6">
+        <h2 className="font-semibold mb-3" style={{ color: 'var(--color-primary)' }}>Change password</h2>
+        <label className="text-sm block mb-3">Current password
+          <input className={input} type="password" value={curPw} onChange={(e) => setCurPw(e.target.value)} autoComplete="current-password" />
+        </label>
+        <label className="text-sm block mb-3">New password
+          <input className={input} type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="At least 8 characters" autoComplete="new-password" />
+        </label>
+        <label className="text-sm block mb-4">Confirm new password
+          <input className={input} type="password" value={newPw2} onChange={(e) => setNewPw2(e.target.value)} autoComplete="new-password" />
+        </label>
+        <Button variant="outline" onClick={changePw} disabled={pwBusy || !curPw || !newPw}>{pwBusy ? 'Changing…' : 'Change password'}</Button>
+      </Card>
     </div>
   )
 }

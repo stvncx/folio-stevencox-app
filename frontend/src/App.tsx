@@ -6,6 +6,7 @@ import { ThemeProvider } from './lib/theme'
 import { ToastProvider } from './components/ui'
 import { Layout } from './components/Layout'
 import { Login } from './views/Login'
+import { Reset } from './views/Reset'
 import { CV } from './views/CV'
 import { TopicalEditor, TopicalList, TopicalNew } from './views/Topical'
 import { CustomPreview, TopicalPreview } from './views/Preview'
@@ -31,6 +32,7 @@ export default function App() {
             <ToastProvider>
               <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/reset" element={<Reset />} />
                 <Route element={<Protected><Layout /></Protected>}>
                   <Route path="/cv" element={<CV />} />
                   <Route path="/topical" element={<TopicalList />} />

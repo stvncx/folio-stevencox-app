@@ -1,15 +1,17 @@
+import secrets
 from typing import List, Optional
 
 from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from ninja import File, Router, Schema
 from ninja.errors import HttpError
 from ninja.files import UploadedFile
 
 from services import ai
-from users.models import AuthToken, UserProfile, build_profile_text
+from users.models import AuthToken, PasswordResetToken, UserProfile, build_profile_text
 
 auth_router = Router(tags=['auth'])
 profile_router = Router(tags=['profile'])
@@ -40,6 +42,68 @@ def login(request, data: LoginIn):
 def logout(request):
     AuthToken.objects.filter(user=request.user).delete()
     return {'detail': 'logged out'}
+
+
+class ChangePwIn(Schema):
+    current_password: str
+    new_password: str
+
+
+@auth_router.post('/change-password/')
+def change_password(request, data: ChangePwIn):
+    user = request.user
+    if not user.check_password(data.current_password):
+        raise HttpError(400, 'Current password is incorrect.')
+    if len(data.new_password or '') < 8:
+        raise HttpError(400, 'New password must be at least 8 characters.')
+    user.set_password(data.new_password)
+    user.save()
+    return {'detail': 'Password changed.'}
+
+
+class ReqResetIn(Schema):
+    ident: str  # email or username
+
+
+@auth_router.post('/request-reset/', auth=None)
+def request_reset(request, data: ReqResetIn):
+    ident = (data.ident or '').strip()
+    user = (User.objects.filter(username__iexact=ident).first()
+            or User.objects.filter(email__iexact=ident).first())
+    if user and user.is_active:
+        PasswordResetToken.objects.filter(user=user, used=False).update(used=True)
+        tok = PasswordResetToken.objects.create(user=user, token=secrets.token_urlsafe(32))
+        link = request.build_absolute_uri(f'/reset?token={tok.token}')
+        if user.email:
+            send_mail('Folio password reset',
+                      f'Use this link to reset your Folio password (valid 24h):\n\n{link}\n\n'
+                      f'If you did not request this, ignore this email.',
+                      getattr(settings, 'DEFAULT_FROM_EMAIL', None), [user.email], fail_silently=True)
+    # Never reveal whether the account exists.
+    return {'detail': 'If that account exists, a reset link has been created. '
+                      'Check your email, or contact the site owner if it does not arrive.'}
+
+
+class ResetPwIn(Schema):
+    token: str
+    new_password: str
+
+
+@auth_router.post('/reset-password/', auth=None)
+def reset_password(request, data: ResetPwIn):
+    tok = (PasswordResetToken.objects.select_related('user')
+           .filter(token=data.token, used=False).first())
+    if not tok or tok.expired:
+        raise HttpError(400, 'This reset link is invalid or has expired.')
+    if len(data.new_password or '') < 8:
+        raise HttpError(400, 'New password must be at least 8 characters.')
+    u = tok.user
+    u.set_password(data.new_password)
+    u.save()
+    tok.used = True
+    tok.save(update_fields=['used'])
+    AuthToken.objects.filter(user=u).delete()  # invalidate any existing sessions
+    return {'detail': 'Password reset. You can now sign in.'}
 
 
 def _profile_dict(request, profile):
