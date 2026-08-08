@@ -1,5 +1,5 @@
-snapshot:    20260807-101026
-created_utc: 2026-08-07T10:10:26Z
+snapshot:    20260808-101000
+created_utc: 2026-08-08T10:10:00Z
 host:        ov-51902e
 code_commit: 4f3aba9e445c55f074c648e7e2acfe183aed1636
 db:          folio_db
